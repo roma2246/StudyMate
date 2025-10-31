@@ -1,10 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+// src/pages/Register.jsx
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../services/auth';
 
 const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
+    username: '',
     role: 'student',
     password: '',
     confirmPassword: ''
@@ -12,24 +14,8 @@ const Register = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   
   const navigate = useNavigate();
-  const dropdownRef = useRef(null);
-
-  // Закрытие dropdown при клике вне его
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowRoleDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,21 +25,14 @@ const Register = () => {
     }));
   };
 
-  const handleRoleSelect = (role) => {
-    setFormData(prevState => ({
-      ...prevState,
-      role: role
-    }));
-    setShowRoleDropdown(false);
-  };
-
-  const toggleRoleDropdown = () => {
-    setShowRoleDropdown(!showRoleDropdown);
-  };
-
   const validateForm = () => {
     if (!formData.name.trim()) {
       setError('Пожалуйста, введите имя');
+      return false;
+    }
+    
+    if (!formData.username.trim()) {
+      setError('Пожалуйста, введите имя пользователя');
       return false;
     }
     
@@ -73,6 +52,9 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    console.log('=== НАЧАЛО РЕГИСТРАЦИИ ===');
+    console.log('Форма данных:', formData);
+    
     if (!validateForm()) {
       return;
     }
@@ -82,14 +64,22 @@ const Register = () => {
     setSuccess('');
     
     try {
-      await register(formData.name, formData.role, formData.password);
-      setSuccess('Аккаунт успешно создан! Перенаправление на страницу входа...');
+      const result = await register(formData.name, formData.username, formData.role, formData.password);
+      console.log('Регистрация успешна:', result);
+      
+      setSuccess('Аккаунт успешно создан! Перенаправление...');
       
       setTimeout(() => {
-        navigate('/login');
+        const role = result.role;
+        console.log('Роль после регистрации:', role);
+        if (role === 'teacher') {
+          navigate('/teacher/dashboard');
+        } else {
+          navigate('/student/dashboard');
+        }
       }, 2000);
     } catch (err) {
-      console.error(err);
+      console.error('Ошибка регистрации:', err);
       setError(err.message || 'Ошибка при создании аккаунта');
     } finally {
       setLoading(false);
@@ -159,61 +149,32 @@ const Register = () => {
                   required
                 />
               </div>
+
+              <div style={styles.inputGroup}>
+                <label style={styles.inputLabel}>Имя пользователя (логин)</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  placeholder="Введите имя пользователя для входа"
+                  style={styles.input}
+                  required
+                />
+              </div>
               
               <div style={styles.inputGroup}>
                 <label style={styles.inputLabel}>Роль</label>
-                <div style={styles.customSelectContainer} ref={dropdownRef}>
-                  <div 
-                    style={{
-                      ...styles.customSelect,
-                      ...(showRoleDropdown && styles.customSelectOpen)
-                    }}
-                    onClick={toggleRoleDropdown}
-                  >
-                    <span style={styles.selectText}>
-                      {formData.role === 'student' ? 'Студент' : 'Преподаватель'}
-                    </span>
-                    <span style={{
-                      ...styles.dropdownArrow,
-                      ...(showRoleDropdown && styles.dropdownArrowOpen)
-                    }}>▼</span>
-                  </div>
-                  
-                  {showRoleDropdown && (
-                    <div style={styles.dropdownMenu}>
-                      <div 
-                        style={{
-                          ...styles.dropdownItem,
-                          ...(formData.role === 'student' && styles.dropdownItemSelected)
-                        }}
-                        onClick={() => handleRoleSelect('student')}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-                        onMouseLeave={(e) => {
-                          if (formData.role !== 'student') {
-                            e.target.style.backgroundColor = '#ffffff';
-                          }
-                        }}
-                      >
-                        Студент
-                      </div>
-                      <div 
-                        style={{
-                          ...styles.dropdownItem,
-                          ...(formData.role === 'teacher' && styles.dropdownItemSelected)
-                        }}
-                        onClick={() => handleRoleSelect('teacher')}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-                        onMouseLeave={(e) => {
-                          if (formData.role !== 'teacher') {
-                            e.target.style.backgroundColor = '#ffffff';
-                          }
-                        }}
-                      >
-                        Преподаватель
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  style={styles.select}
+                  required
+                >
+                  <option value="student">Студент</option>
+                  <option value="teacher">Преподаватель</option>
+                </select>
               </div>
               
               <div style={styles.inputGroup}>
@@ -279,7 +240,7 @@ const Register = () => {
           100% { transform: rotate(360deg); }
         }
         
-        input:focus {
+        input:focus, select:focus {
           border-color: #3b82f6 !important;
           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
         }
@@ -291,15 +252,6 @@ const Register = () => {
         
         a:hover {
           color: #1d4ed8 !important;
-        }
-
-        /* Убираем автозаполнение стилей браузера */
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus, 
-        input:-webkit-autofill:active {
-          -webkit-box-shadow: 0 0 0 30px white inset !important;
-          -webkit-text-fill-color: #1f2937 !important;
         }
       `}</style>
     </div>
@@ -512,77 +464,18 @@ const styles = {
     color: '#1f2937'
   },
   
-  // Кастомный селект
-  customSelectContainer: {
-    position: 'relative',
-    width: '100%'
-  },
-  
-  customSelect: {
+  select: {
     padding: '16px',
-    border: '2px solid #d1d5db',
+    border: '2px solid #e5e7eb',
     borderRadius: '12px',
     fontSize: '16px',
     background: '#ffffff',
     cursor: 'pointer',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    outline: 'none',
     transition: 'all 0.2s ease',
     fontWeight: '400',
-    color: '#1f2937',
-    outline: 'none',
-    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-  },
-  
-  customSelectOpen: {
-    borderColor: '#3b82f6',
-    boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1), 0 1px 2px rgba(0, 0, 0, 0.05)',
-    border: '2px solid #3b82f6'
-  },
-  
-  selectText: {
-    color: '#1f2937'
-  },
-  
-  dropdownArrow: {
-    fontSize: '12px',
-    color: '#6b7280',
-    transition: 'transform 0.2s ease'
-  },
-  
-  dropdownArrowOpen: {
-    transform: 'rotate(180deg)'
-  },
-  
-  dropdownMenu: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    background: '#ffffff',
-    border: '2px solid #3b82f6',
-    borderTop: 'none',
-    borderRadius: '0 0 12px 12px',
-    boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
-    zIndex: 1000,
-    marginTop: '-2px',
-    overflow: 'hidden'
-  },
-  
-  dropdownItem: {
-    padding: '16px',
-    fontSize: '16px',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    borderBottom: '1px solid #f3f4f6',
-    backgroundColor: '#ffffff',
-    color: '#1f2937'
-  },
-  
-  dropdownItemSelected: {
-    backgroundColor: '#3b82f6',
-    color: '#ffffff'
+    width: '100%',
+    boxSizing: 'border-box'
   },
   
   submitButton: {

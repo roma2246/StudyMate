@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, getUserRole } from '../services/auth';
@@ -31,8 +32,12 @@ const Login = () => {
     setError('');
     
     try {
-      await login(formData.username, formData.password);
+      console.log('Attempting login with:', formData.username);
+      const result = await login(formData.username, formData.password);
+      console.log('Login successful:', result);
+      
       const role = getUserRole();
+      console.log('User role:', role);
       
       if (role === 'teacher') {
         navigate('/teacher/dashboard');
@@ -40,6 +45,7 @@ const Login = () => {
         navigate('/student/dashboard');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError(err.message || 'Ошибка при входе в систему');
     } finally {
       setLoading(false);
@@ -48,12 +54,9 @@ const Login = () => {
 
   return (
     <div style={styles.page}>
-      {/* Градиентный фон */}
       <div style={styles.gradientBackground}></div>
       
-      {/* Основной контейнер */}
       <div style={styles.mainContainer}>
-        {/* Левая часть с логотипом и информацией */}
         <div style={styles.leftSection}>
           <div style={styles.logoSection}>
             <h1 style={styles.logo}>StudyMate</h1>
@@ -76,7 +79,6 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Правая часть с формой */}
         <div style={styles.rightSection}>
           <div style={styles.formContainer}>
             <div style={styles.formHeader}>
@@ -167,6 +169,15 @@ const Login = () => {
         
         .footer-link:hover {
           color: #1d4ed8 !important;
+        }
+
+        /* Убираем автозаполнение стилей браузера */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0 30px white inset !important;
+          -webkit-text-fill-color: #1f2937 !important;
         }
       `}</style>
     </div>
@@ -359,8 +370,10 @@ const styles = {
     transition: 'all 0.2s ease',
     outline: 'none',
     fontWeight: '400',
-    background: 'rgba(255, 255, 255, 0.8)',
-    backdropFilter: 'blur(10px)'
+    background: '#ffffff',
+    width: '100%',
+    boxSizing: 'border-box',
+    color: '#1f2937'
   },
   
   submitButton: {
@@ -378,7 +391,8 @@ const styles = {
     justifyContent: 'center',
     gap: '10px',
     marginTop: '8px',
-    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
+    width: '100%'
   },
   
   submitButtonDisabled: {
@@ -399,7 +413,7 @@ const styles = {
     textAlign: 'center',
     marginTop: '32px',
     paddingTop: '24px',
-    borderTop: '1px solid rgba(243, 244, 246, 0.8)'
+    borderTop: '1px solid #f3f4f6'
   },
   
   footerText: {
@@ -412,8 +426,7 @@ const styles = {
     color: '#3b82f6',
     textDecoration: 'none',
     fontWeight: '600',
-    transition: 'color 0.2s ease',
-    className: 'footer-link'
+    transition: 'color 0.2s ease'
   }
 };
 

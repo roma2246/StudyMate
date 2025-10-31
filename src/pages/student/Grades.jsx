@@ -1,15 +1,23 @@
+// src/pages/student/Grades.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import Chart from '../../components/Chart';
+import { isAuthenticated } from '../../services/auth';
 
 const StudentGrades = () => {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate('/login');
+      return;
+    }
     loadGradesData();
-  }, []);
+  }, [navigate]);
 
   const loadGradesData = async () => {
     try {
@@ -93,35 +101,41 @@ const StudentGrades = () => {
   };
 
   return (
-    <div className="app">
+    <div style={styles.app}>
       <Navbar role="student" />
-      <div className="app-body">
+      <div style={styles.appBody}>
         <Sidebar role="student" />
-        <main className="main-content">
-          <div className="page-header">
-            <h1>Мои оценки</h1>
+        <main style={styles.mainContent}>
+          <div style={styles.pageHeader}>
+            <h1 style={styles.pageTitle}>Мои оценки</h1>
           </div>
           
           {loading ? (
-            <div className="loading">Загрузка...</div>
+            <div style={styles.loading}>Загрузка...</div>
           ) : (
-            <div className="grades-container">
-              <div className="subjects-grid">
+            <div style={styles.gradesContainer}>
+              <div style={styles.subjectsGrid}>
                 {subjects.map(subject => (
-                  <div key={subject.id} className="subject-card">
-                    <div className="subject-header">
-                      <h3>{subject.name}</h3>
-                      <div className="subject-average">
-                        Средний балл: <span>{subject.average}</span>
+                  <div key={subject.id} style={styles.subjectCard}>
+                    <div style={styles.subjectHeader}>
+                      <h3 style={styles.subjectName}>{subject.name}</h3>
+                      <div style={styles.subjectAverage}>
+                        Средний балл: <span style={styles.averageValue}>{subject.average}</span>
                       </div>
                     </div>
                     
-                    <div className="subject-grades">
-                      <div className="grades-list">
-                        <h4>Оценки:</h4>
-                        <div className="grades-tags">
+                    <div style={styles.subjectGrades}>
+                      <div style={styles.gradesList}>
+                        <h4 style={styles.gradesTitle}>Оценки:</h4>
+                        <div style={styles.gradesTags}>
                           {subject.grades.map((grade, index) => (
-                            <span key={index} className={`grade-tag grade-${grade}`}>
+                            <span 
+                              key={index} 
+                              style={{
+                                ...styles.gradeTag,
+                                ...styles[`grade${grade}`]
+                              }}
+                            >
                               {grade}
                             </span>
                           ))}
@@ -129,7 +143,7 @@ const StudentGrades = () => {
                       </div>
                     </div>
                     
-                    <div className="subject-chart">
+                    <div style={styles.subjectChart}>
                       <Chart 
                         type="bar" 
                         title={`Оценки по ${subject.name}`}
@@ -145,6 +159,106 @@ const StudentGrades = () => {
       </div>
     </div>
   );
+};
+
+const styles = {
+  app: {
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  appBody: {
+    display: 'flex',
+    flex: 1
+  },
+  mainContent: {
+    flex: 1,
+    padding: '2rem',
+    overflowY: 'auto'
+  },
+  pageHeader: {
+    marginBottom: '2rem'
+  },
+  pageTitle: {
+    fontSize: '2rem',
+    fontWeight: '700',
+    color: '#1f2937',
+    margin: 0
+  },
+  gradesContainer: {
+    marginTop: '1rem'
+  },
+  subjectsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
+    gap: '1.5rem'
+  },
+  subjectCard: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '1.5rem',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    border: '1px solid #e5e7eb'
+  },
+  subjectHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '1rem'
+  },
+  subjectName: {
+    fontSize: '1.25rem',
+    fontWeight: '600',
+    color: '#1f2937',
+    margin: 0
+  },
+  subjectAverage: {
+    fontSize: '0.875rem',
+    color: '#6b7280'
+  },
+  averageValue: {
+    fontWeight: '600',
+    color: '#1f2937'
+  },
+  subjectGrades: {
+    marginBottom: '1rem'
+  },
+  gradesList: {
+    marginBottom: '1rem'
+  },
+  gradesTitle: {
+    fontSize: '1rem',
+    fontWeight: '600',
+    color: '#374151',
+    margin: '0 0 0.5rem 0'
+  },
+  gradesTags: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.5rem'
+  },
+  gradeTag: {
+    padding: '0.25rem 0.75rem',
+    borderRadius: '1rem',
+    fontSize: '0.875rem',
+    fontWeight: '600',
+    color: 'white'
+  },
+  grade5: { backgroundColor: '#10b981' },
+  grade4: { backgroundColor: '#3b82f6' },
+  grade3: { backgroundColor: '#f59e0b' },
+  grade2: { backgroundColor: '#ef4444' },
+  subjectChart: {
+    width: '100%'
+  },
+  loading: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '3rem',
+    color: '#6b7280',
+    fontSize: '1.125rem'
+  }
 };
 
 export default StudentGrades;

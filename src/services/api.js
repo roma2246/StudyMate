@@ -1,22 +1,9 @@
+// src/services/api.js
 // API service for handling all backend requests
 
-import { getToken } from './auth';
-
-const BASE_URL = '/api'; // In a real app, this would be your backend URL
-
-// Helper function to make API requests with authorization header
-const apiRequest = async (endpoint, options = {}) => {
-  const token = getToken();
-  
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
-    },
-    ...options
-  };
-
-  // In a real app, you would fetch from `${BASE_URL}${endpoint}`
+// Helper function to make API requests
+const apiRequest = async () => {
+  // In a real app, you would make actual API requests
   // For now, we'll simulate API responses
   
   return new Promise((resolve) => {
@@ -28,100 +15,73 @@ const apiRequest = async (endpoint, options = {}) => {
 
 // Teacher Dashboard APIs
 export const getDashboardStats = async () => {
-  return apiRequest('/dashboard/stats');
+  return apiRequest();
 };
 
 export const getTopStudents = async () => {
-  return apiRequest('/dashboard/top-students');
+  return apiRequest();
 };
 
 export const getGpaDistribution = async () => {
-  return apiRequest('/dashboard/gpa-distribution');
+  return apiRequest();
 };
 
 // Students APIs
 export const getStudents = async () => {
-  return apiRequest('/students');
+  return apiRequest();
 };
 
-export const createStudent = async (studentData) => {
-  return apiRequest('/students', {
-    method: 'POST',
-    body: JSON.stringify(studentData)
-  });
+export const createStudent = async () => {
+  return apiRequest();
 };
 
-export const updateStudent = async (id, studentData) => {
-  return apiRequest(`/students/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(studentData)
-  });
+export const updateStudent = async () => {
+  return apiRequest();
 };
 
-export const deleteStudent = async (id) => {
-  return apiRequest(`/students/${id}`, {
-    method: 'DELETE'
-  });
+export const deleteStudent = async () => {
+  return apiRequest();
 };
 
 // Subjects APIs
 export const getSubjects = async () => {
-  return apiRequest('/subjects');
+  return apiRequest();
 };
 
-export const createSubject = async (subjectData) => {
-  return apiRequest('/subjects', {
-    method: 'POST',
-    body: JSON.stringify(subjectData)
-  });
+export const createSubject = async () => {
+  return apiRequest();
 };
 
-export const updateSubject = async (id, subjectData) => {
-  return apiRequest(`/subjects/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(subjectData)
-  });
+export const updateSubject = async () => {
+  return apiRequest();
 };
 
-export const deleteSubject = async (id) => {
-  return apiRequest(`/subjects/${id}`, {
-    method: 'DELETE'
-  });
+export const deleteSubject = async () => {
+  return apiRequest();
 };
 
 // Grades APIs
 export const getGrades = async () => {
-  return apiRequest('/grades');
+  return apiRequest();
 };
 
-export const createGrade = async (gradeData) => {
-  return apiRequest('/grades', {
-    method: 'POST',
-    body: JSON.stringify(gradeData)
-  });
+export const createGrade = async () => {
+  return apiRequest();
 };
 
-export const updateGrade = async (id, gradeData) => {
-  return apiRequest(`/grades/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(gradeData)
-  });
+export const updateGrade = async () => {
+  return apiRequest();
 };
 
-export const deleteGrade = async (id) => {
-  return apiRequest(`/grades/${id}`, {
-    method: 'DELETE'
-  });
+export const deleteGrade = async () => {
+  return apiRequest();
 };
 
 // Student Profile APIs
-export const getStudentProfile = async (studentId) => {
-  return apiRequest(`/students/${studentId}/profile`);
+export const getStudentProfile = async () => {
+  return apiRequest();
 };
 
-export const updateStudentProfile = async (studentId, profileData) => {
-  return apiRequest(`/students/${studentId}/profile`, {
-    method: 'PUT',
-    body: JSON.stringify(profileData)
-  });
+export const updateStudentProfile = async () => {
+  return apiRequest();
 };
