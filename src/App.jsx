@@ -2,8 +2,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { isAuthenticated, getUserRole } from './services/auth';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import StudentLogin from './pages/student/Login';
+import StudentRegister from './pages/student/Register';
+import TeacherLogin from './pages/teacher/Login';
+import TeacherRegister from './pages/teacher/Register';
 import StudentDashboard from './pages/student/Dashboard';
 import StudentGrades from './pages/student/Grades';
 import StudentProfile from './pages/student/Profile';
@@ -12,17 +14,23 @@ import TeacherStudents from './pages/teacher/Students';
 import TeacherSubjects from './pages/teacher/Subjects';
 import TeacherGrades from './pages/teacher/Grades';
 import TeacherRating from './pages/teacher/Rating';
+import TeacherSchedule from './pages/teacher/Schedule';
+import TeacherAssignments from './pages/teacher/Assignments';
+import TeacherProfile from './pages/teacher/Profile';
+import StudentSchedule from './pages/student/Schedule';
+import StudentAssignments from './pages/student/Assignments';
 import Debug from './pages/Debug';
 
 // Защищенные маршруты
 const ProtectedRoute = ({ children, allowedRoles }) => {
   if (!isAuthenticated()) {
-    return <Navigate to="/login" replace />;
+    const role = allowedRoles?.[0] || 'student';
+    return <Navigate to={`/${role}/login`} replace />;
   }
   
   const userRole = getUserRole();
   if (allowedRoles && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={`/${userRole}/dashboard`} replace />;
   }
   
   return children;
@@ -32,9 +40,13 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Публичные маршруты */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Публичные маршруты - студенты */}
+        <Route path="/student/login" element={<StudentLogin />} />
+        <Route path="/student/register" element={<StudentRegister />} />
+        
+        {/* Публичные маршруты - преподаватели */}
+        <Route path="/teacher/login" element={<TeacherLogin />} />
+        <Route path="/teacher/register" element={<TeacherRegister />} />
         
         {/* Защищенные маршруты для студентов */}
         <Route 
@@ -58,6 +70,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <StudentProfile />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/student/schedule" 
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentSchedule />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/student/assignments" 
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentAssignments />
             </ProtectedRoute>
           } 
         />
@@ -103,15 +131,39 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route 
+          path="/teacher/schedule" 
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <TeacherSchedule />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/teacher/assignments" 
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <TeacherAssignments />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/teacher/profile" 
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <TeacherProfile />
+            </ProtectedRoute>
+          } 
+        />
         
         {/* Отладочный маршрут */}
         <Route path="/debug" element={<Debug />} />
         
         {/* Реддирект по умолчанию */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/student/login" replace />} />
         
         {/* Fallback для несуществующих маршрутов */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/student/login" replace />} />
       </Routes>
     </Router>
   );

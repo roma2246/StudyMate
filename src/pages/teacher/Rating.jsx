@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import Chart from '../../components/Chart';
+import { getStudents, getStudentGPA } from '../../services/api';
 
 const TeacherRating = () => {
   const [students, setStudents] = useState([]);
@@ -15,31 +16,54 @@ const TeacherRating = () => {
   const loadRatingData = async () => {
     try {
       setLoading(true);
-      // In a real app, this would be an actual API call
-      const mockStudents = [
-        { id: 1, name: 'Иван Иванов', gpa: 4.0 },
-        { id: 2, name: 'Мария Петрова', gpa: 3.9 },
-        { id: 3, name: 'Алексей Сидоров', gpa: 3.8 },
-        { id: 4, name: 'Елена Козлова', gpa: 3.7 },
-        { id: 5, name: 'Дмитрий Смирнов', gpa: 3.6 },
-        { id: 6, name: 'Ольга Новикова', gpa: 3.5 },
-        { id: 7, name: 'Сергей Морозов', gpa: 3.4 },
-        { id: 8, name: 'Анна Волкова', gpa: 3.3 },
-        { id: 9, name: 'Павел Лебедев', gpa: 3.2 },
-        { id: 10, name: 'Татьяна Зайцева', gpa: 3.1 }
-      ];
       
-      setStudents(mockStudents);
+      // Получаем всех студентов из БД
+      const studentsData = await getStudents();
+      if (!Array.isArray(studentsData)) {
+        setStudents([]);
+        setGpaData([]);
+        return;
+      }
       
-      // Prepare data for chart
-      const chartData = mockStudents.slice(0, 5).map(student => ({
+      // Для каждого студента получаем GPA
+      const studentsWithGPA = await Promise.all(
+        studentsData.map(async (student) => {
+          try {
+            const gpaResponse = await getStudentGPA(student.id);
+            const gpa = gpaResponse?.gpa || 0;
+            const name = student.user?.name || `Студент #${student.id}`;
+            return {
+              id: student.id,
+              name: name,
+              gpa: gpa
+            };
+          } catch (error) {
+            console.error(`Failed to get GPA for student ${student.id}:`, error);
+            return {
+              id: student.id,
+              name: student.user?.name || `Студент #${student.id}`,
+              gpa: 0
+            };
+          }
+        })
+      );
+      
+      // Сортируем по GPA (от большего к меньшему)
+      const sortedStudents = studentsWithGPA.sort((a, b) => b.gpa - a.gpa);
+      setStudents(sortedStudents);
+      
+      // Prepare data for chart (топ-5)
+      const chartData = sortedStudents.slice(0, 5).map(student => ({
         label: student.name.split(' ')[0], // First name only for chart
-        value: student.gpa
+        value: student.gpa,
+        color: '#667eea'
       }));
       
       setGpaData(chartData);
     } catch (error) {
       console.error('Failed to load rating data:', error);
+      setStudents([]);
+      setGpaData([]);
     } finally {
       setLoading(false);
     }

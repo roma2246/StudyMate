@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import Table from '../../components/Table';
-import { getStudents, createStudent, updateStudent, deleteStudent } from '../../services/api';
+import { getStudents, createStudent, updateStudent, deleteStudent, getStudentGroups } from '../../services/api';
 
 const TeacherStudents = () => {
   const [students, setStudents] = useState([]);
+  const [availableGroups, setAvailableGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
@@ -21,24 +22,40 @@ const TeacherStudents = () => {
 
   useEffect(() => {
     loadStudents();
+    loadGroups();
   }, []);
 
   const loadStudents = async () => {
     try {
       setLoading(true);
-      // In a real app, this would be an actual API call
-      const mockStudents = [
-        { id: 1, name: 'Иван Иванов', group: 'Группа 1' },
-        { id: 2, name: 'Мария Петрова', group: 'Группа 2' },
-        { id: 3, name: 'Алексей Сидоров', group: 'Группа 1' },
-        { id: 4, name: 'Елена Козлова', group: 'Группа 3' },
-        { id: 5, name: 'Дмитрий Смирнов', group: 'Группа 2' }
-      ];
-      setStudents(mockStudents);
+      // Получаем студентов из БД
+      const studentsData = await getStudents();
+      if (Array.isArray(studentsData)) {
+        // Преобразуем данные из БД в формат для отображения
+        const formattedStudents = studentsData.map(student => ({
+          id: student.id,
+          name: student.user?.name || `Студент #${student.id}`,
+          group: student.group || 'Не указана'
+        }));
+        setStudents(formattedStudents);
+      } else {
+        setStudents([]);
+      }
     } catch (error) {
       console.error('Failed to load students:', error);
+      setStudents([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadGroups = async () => {
+    try {
+      const groups = await getStudentGroups();
+      setAvailableGroups(Array.isArray(groups) ? groups : []);
+    } catch (error) {
+      console.error('Failed to load groups:', error);
+      setAvailableGroups([]);
     }
   };
 
@@ -50,34 +67,60 @@ const TeacherStudents = () => {
     }));
   };
 
+  const handleSelectGroup = (group) => {
+    setFormData(prev => ({
+      ...prev,
+      group: group
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!editingStudent) {
+      alert('Создание студентов происходит через регистрацию. Пожалуйста, попросите студента зарегистрироваться.');
+      setShowModal(false);
+      return;
+    }
+    
+    // Валидация: группа должна быть введена
+    if (!formData.group || formData.group.trim() === '') {
+      alert('Пожалуйста, введите группу');
+      return;
+    }
+    
     try {
-      if (editingStudent) {
-        // Update existing student
-        await updateStudent(editingStudent.id, formData);
-      } else {
-        // Create new student
-        await createStudent(formData);
-      }
+      // Update existing student - отправляем только group (name хранится в User)
+      await updateStudent(editingStudent.id, { group: formData.group.trim() });
+      alert('Группа студента успешно обновлена!');
       
       // Reset form and reload data
       setFormData({ name: '', group: '' });
       setEditingStudent(null);
       setShowModal(false);
       loadStudents();
+      loadGroups(); // Обновляем список групп после сохранения
     } catch (error) {
       console.error('Failed to save student:', error);
+      alert('Ошибка при сохранении: ' + (error.message || 'Неизвестная ошибка'));
     }
+  };
+  
+  const handleCloseModal = () => {
+    setFormData({ name: '', group: '' });
+    setEditingStudent(null);
+    setShowModal(false);
   };
 
   const handleEdit = (student) => {
     setEditingStudent(student);
+    const currentGroup = student.group === 'Не указана' ? '' : (student.group || '');
+    
     setFormData({
       name: student.name,
-      group: student.group
+      group: currentGroup
     });
+    
     setShowModal(true);
   };
 
@@ -103,30 +146,18 @@ const TeacherStudents = () => {
   );
 
   const tableColumns = [
-    { key: 'id', header: 'ID' },
-    { key: 'name', header: 'ФИО' },
-    { key: 'group', header: 'Группа' }
+    { key: 'id', header: 'ID', width: '10%' },
+    { key: 'name', header: 'ФИО', width: '60%' },
+    { key: 'group', header: 'Группа', width: '30%' }
   ];
 
   const tableActions = [
-    { name: 'view', label: 'Успеваемость', type: 'secondary' },
-    { name: 'edit', label: 'Редактировать', type: 'primary' },
-    { name: 'delete', label: 'Удалить', type: 'danger' }
+    { name: 'edit', label: 'Выставить группу', type: 'primary' }
   ];
 
   const handleAction = (action, student) => {
-    switch (action) {
-      case 'view':
-        handleViewProgress(student);
-        break;
-      case 'edit':
-        handleEdit(student);
-        break;
-      case 'delete':
-        handleDelete(student.id);
-        break;
-      default:
-        break;
+    if (action === 'edit') {
+      handleEdit(student);
     }
   };
 
@@ -138,16 +169,9 @@ const TeacherStudents = () => {
         <main className="main-content">
           <div className="page-header">
             <h1>Студенты</h1>
-            <button 
-              className="btn btn-primary"
-              onClick={() => {
-                setEditingStudent(null);
-                setFormData({ name: '', group: '' });
-                setShowModal(true);
-              }}
-            >
-              + Добавить студента
-            </button>
+            <p style={{ fontSize: '0.875rem', color: '#64748b', margin: '0.5rem 0 0 0' }}>
+              Создание студентов происходит через регистрацию. Здесь можно редактировать группу существующих студентов.
+            </p>
           </div>
           
           <div className="page-filters">
@@ -177,26 +201,31 @@ const TeacherStudents = () => {
             <div className="modal-overlay">
               <div className="modal">
                 <div className="modal-header">
-                  <h2>{editingStudent ? 'Редактировать студента' : 'Добавить студента'}</h2>
+                  <h2>{editingStudent ? `Выставить группу: ${editingStudent.name}` : 'Добавить студента'}</h2>
                   <button 
                     className="modal-close"
-                    onClick={() => setShowModal(false)}
+                    onClick={handleCloseModal}
                   >
                     ×
                   </button>
                 </div>
                 <form onSubmit={handleSubmit} className="modal-body">
-                  <div className="form-group">
-                    <label htmlFor="name">ФИО</label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
+                  {editingStudent && (
+                    <div className="form-group">
+                      <label htmlFor="name">ФИО</label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={formData.name}
+                        style={{ backgroundColor: '#f9fafb', cursor: 'not-allowed' }}
+                        disabled
+                      />
+                      <p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                        Имя нельзя изменить (хранится в профиле пользователя)
+                      </p>
+                    </div>
+                  )}
                   
                   <div className="form-group">
                     <label htmlFor="group">Группа</label>
@@ -206,15 +235,56 @@ const TeacherStudents = () => {
                       name="group"
                       value={formData.group}
                       onChange={handleInputChange}
+                      placeholder="Введите название группы (например: ИС-21, ФИИТ-3, Группа 1)"
                       required
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        fontSize: '1rem',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px'
+                      }}
                     />
+                    {availableGroups.length > 0 && (
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+                          Или выберите из существующих:
+                        </p>
+                        <div style={{ 
+                          display: 'flex', 
+                          flexWrap: 'wrap', 
+                          gap: '0.5rem',
+                          marginTop: '0.5rem'
+                        }}>
+                          {availableGroups.map((group) => (
+                            <button
+                              key={group}
+                              type="button"
+                              onClick={() => handleSelectGroup(group)}
+                              style={{
+                                padding: '0.375rem 0.75rem',
+                                fontSize: '0.75rem',
+                                backgroundColor: formData.group === group ? '#3b82f6' : '#f3f4f6',
+                                color: formData.group === group ? 'white' : '#374151',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '0.375rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                            >
+                              {group}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="modal-footer">
                     <button 
                       type="button" 
                       className="btn btn-secondary"
-                      onClick={() => setShowModal(false)}
+                      onClick={handleCloseModal}
                     >
                       Отмена
                     </button>

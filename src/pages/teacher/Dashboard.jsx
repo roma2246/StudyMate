@@ -7,6 +7,7 @@ import Card from '../../components/Card';
 import Chart from '../../components/Chart';
 import Table from '../../components/Table';
 import { getUserName, isAuthenticated } from '../../services/auth';
+import { getStudents, getSubjects, getGrades, getStudentGPA } from '../../services/api';
 
 const TeacherDashboard = () => {
   const [stats, setStats] = useState({
@@ -35,37 +36,134 @@ const TeacherDashboard = () => {
     try {
       setLoading(true);
       
-      // Mock data for admin dashboard
-      setStats({
-        students: 32,
-        subjects: 5,
-        grades: 156,
-        averageGpa: 4.1
-      });
-      
-      setTopStudents([
-        { id: 1, name: 'Иван Иванов', gpa: 4.8, group: 'Группа 1' },
-        { id: 2, name: 'Мария Петрова', gpa: 4.7, group: 'Группа 2' },
-        { id: 3, name: 'Алексей Сидоров', gpa: 4.6, group: 'Группа 1' },
-        { id: 4, name: 'Елена Козлова', gpa: 4.5, group: 'Группа 3' },
-        { id: 5, name: 'Дмитрий Смирнов', gpa: 4.4, group: 'Группа 2' }
-      ]);
-      
-      setGpaDistribution([
-        { label: 'Математика', value: 4.3, color: '#3b82f6' },
-        { label: 'Физика', value: 4.1, color: '#ef4444' },
-        { label: 'Химия', value: 3.9, color: '#10b981' },
-        { label: 'Биология', value: 4.2, color: '#f59e0b' },
-        { label: 'Информатика', value: 4.5, color: '#8b5cf6' }
+      // Получаем все данные параллельно
+      const [students, subjects, grades] = await Promise.all([
+        getStudents(),
+        getSubjects(),
+        getGrades()
       ]);
 
-      setRecentActivity([
-        { id: 1, student: 'Иван Иванов', action: 'Добавлена оценка', subject: 'Математика', grade: 5, date: '2023-10-15 14:30' },
-        { id: 2, student: 'Мария Петрова', action: 'Обновлен профиль', subject: '-', grade: '-', date: '2023-10-15 13:15' },
-        { id: 3, student: 'Алексей Сидоров', action: 'Добавлена оценка', subject: 'Физика', grade: 4, date: '2023-10-14 16:45' },
-        { id: 4, student: 'Елена Козлова', action: 'Добавлен комментарий', subject: 'Биология', grade: '-', date: '2023-10-14 11:20' },
-        { id: 5, student: 'Дмитрий Смирнов', action: 'Добавлена оценка', subject: 'Информатика', grade: 5, date: '2023-10-13 15:10' }
-      ]);
+      // Статистика
+      const totalGrades = grades.length;
+      let totalGPA = 0;
+      let gradeCount = 0;
+      
+      if (grades.length > 0) {
+        grades.forEach(g => {
+          if (g.value) {
+            totalGPA += g.value;
+            gradeCount++;
+          }
+        });
+      }
+      
+      const averageGpa = gradeCount > 0 ? totalGPA / gradeCount : 0;
+
+      setStats({
+        students: students.length || 0,
+        subjects: subjects.length || 0,
+        grades: totalGrades,
+        averageGpa: Math.round(averageGpa * 10) / 10
+      });
+
+      // Топ студентов с GPA
+      const studentsWithGPA = await Promise.all(
+        students.map(async (student) => {
+          try {
+            const gpa = await getStudentGPA(student.id);
+            return {
+              id: student.id,
+              name: student.user?.name || `Студент #${student.id}`,
+              gpa: Math.round(gpa * 10) / 10,
+              group: student.group || 'Не указана'
+            };
+          } catch (error) {
+            // Если GPA не получен, рассчитываем из оценок студента
+            const studentGrades = grades.filter(g => 
+              g.student?.id === student.id || g.studentId === student.id
+            );
+            
+            let gpa = 0;
+            if (studentGrades.length > 0) {
+              const sum = studentGrades.reduce((acc, g) => acc + (g.value || 0), 0);
+              gpa = sum / studentGrades.length;
+            }
+            
+            return {
+              id: student.id,
+              name: student.user?.name || `Студент #${student.id}`,
+              gpa: Math.round(gpa * 10) / 10,
+              group: student.group || 'Не указана'
+            };
+          }
+        })
+      );
+
+      const topStudentsArray = studentsWithGPA
+        .filter(s => s.gpa > 0)
+        .sort((a, b) => b.gpa - a.gpa)
+        .slice(0, 5);
+      
+      setTopStudents(topStudentsArray);
+
+      // GPA по предметам
+      const subjectsMap = new Map(subjects.map(s => [s.id, s.name]));
+      const gpaBySubject = {};
+      const subjectCounts = {};
+      
+      grades.forEach(grade => {
+        const subjectId = grade.subject?.id || grade.subjectId;
+        const subjectName = subjectsMap.get(subjectId) || 'Неизвестный предмет';
+        
+        if (!gpaBySubject[subjectName]) {
+          gpaBySubject[subjectName] = 0;
+          subjectCounts[subjectName] = 0;
+        }
+        
+        if (grade.value) {
+          gpaBySubject[subjectName] += grade.value;
+          subjectCounts[subjectName]++;
+        }
+      });
+
+      const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
+      const gpaDistributionArray = Object.keys(gpaBySubject)
+        .map((subjectName, index) => {
+          const avg = gpaBySubject[subjectName] / subjectCounts[subjectName];
+          return {
+            label: subjectName,
+            value: Math.round(avg * 10) / 10,
+            color: colors[index % colors.length]
+          };
+        })
+        .sort((a, b) => b.value - a.value);
+      
+      setGpaDistribution(gpaDistributionArray);
+
+      // Последняя активность (последние оценки)
+      const studentsMap = new Map(students.map(s => [s.id, s.user?.name || `Студент #${s.id}`]));
+      
+      const recentActivityArray = grades
+        .filter(g => g.createdAt || g.value)
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        .slice(0, 5)
+        .map(grade => {
+          const studentName = studentsMap.get(grade.student?.id || grade.studentId) || 'Неизвестный студент';
+          const subjectName = subjectsMap.get(grade.subject?.id || grade.subjectId) || 'Неизвестный предмет';
+          const date = grade.createdAt ? new Date(grade.createdAt).toLocaleString('ru-RU') : '-';
+          
+          return {
+            id: grade.id,
+            student: studentName,
+            action: 'Добавлена оценка',
+            subject: subjectName,
+            grade: grade.value || '-',
+            date: date
+          };
+        });
+      
+      setRecentActivity(recentActivityArray);
+
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
@@ -126,34 +224,31 @@ const TeacherDashboard = () => {
               <div style={styles.dashboardStats}>
                 <Card 
                   title="Студенты" 
-                  value={stats.students} 
+                  value={stats.students || 0} 
                   subtitle="в системе"
                   icon="👥" 
                   color="blue" 
-                  trend="+2"
                 />
                 <Card 
                   title="Предметы" 
-                  value={stats.subjects} 
+                  value={stats.subjects || 0} 
                   subtitle="активных"
                   icon="📚" 
                   color="green" 
                 />
                 <Card 
                   title="Оценки" 
-                  value={stats.grades} 
+                  value={stats.grades || 0} 
                   subtitle="выставлено"
                   icon="📝" 
                   color="purple" 
-                  trend="+12"
                 />
                 <Card 
                   title="Средний GPA" 
-                  value={stats.averageGpa} 
+                  value={stats.averageGpa || 0} 
                   subtitle="по всем предметам"
                   icon="📊" 
                   color="yellow" 
-                  trend="+0.2"
                 />
               </div>
               

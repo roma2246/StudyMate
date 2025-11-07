@@ -1,61 +1,44 @@
+// src/pages/teacher/Grades.jsx
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
-import Table from '../../components/Table';
-import { getGrades, createGrade, updateGrade, deleteGrade } from '../../services/api';
+import { getGrades, getStudents, getSubjects, createGrade, updateGrade, deleteGrade } from '../../services/api';
 
 const TeacherGrades = () => {
   const [grades, setGrades] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingGrade, setEditingGrade] = useState(null);
   const [filters, setFilters] = useState({
-    subject: '',
-    student: ''
+    subjectId: '',
+    studentId: ''
   });
   
   const [formData, setFormData] = useState({
     studentId: '',
     subjectId: '',
-    grade: '',
-    date: ''
+    value: ''
   });
 
-  // Mock data for students and subjects
-  const [students] = useState([
-    { id: 1, name: 'Иван Иванов' },
-    { id: 2, name: 'Мария Петрова' },
-    { id: 3, name: 'Алексей Сидоров' },
-    { id: 4, name: 'Елена Козлова' },
-    { id: 5, name: 'Дмитрий Смирнов' }
-  ]);
-
-  const [subjects] = useState([
-    { id: 1, name: 'Математика' },
-    { id: 2, name: 'Физика' },
-    { id: 3, name: 'Химия' },
-    { id: 4, name: 'Биология' },
-    { id: 5, name: 'Информатика' }
-  ]);
-
   useEffect(() => {
-    loadGrades();
+    loadData();
   }, []);
 
-  const loadGrades = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      // In a real app, this would be an actual API call
-      const mockGrades = [
-        { id: 1, student: 'Иван Иванов', subject: 'Математика', grade: 5, date: '2023-10-15' },
-        { id: 2, student: 'Мария Петрова', subject: 'Физика', grade: 4, date: '2023-10-14' },
-        { id: 3, student: 'Алексей Сидоров', subject: 'Химия', grade: 3, date: '2023-10-13' },
-        { id: 4, student: 'Елена Козлова', subject: 'Биология', grade: 5, date: '2023-10-12' },
-        { id: 5, student: 'Дмитрий Смирнов', subject: 'Информатика', grade: 4, date: '2023-10-11' }
-      ];
-      setGrades(mockGrades);
+      const [gradesData, studentsData, subjectsData] = await Promise.all([
+        getGrades(),
+        getStudents(),
+        getSubjects()
+      ]);
+      setGrades(gradesData);
+      setStudents(studentsData);
+      setSubjects(subjectsData);
     } catch (error) {
-      console.error('Failed to load grades:', error);
+      console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
     }
@@ -73,43 +56,59 @@ const TeacherGrades = () => {
     const { name, value } = e.target;
     setFilters(prev => ({
       ...prev,
-      [name]: value
+      [name]: value === '' ? '' : Number(value)
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Валидация
+    if (!formData.studentId || formData.studentId === '') {
+      alert('Пожалуйста, выберите студента');
+      return;
+    }
+    if (!formData.subjectId || formData.subjectId === '') {
+      alert('Пожалуйста, выберите предмет');
+      return;
+    }
+    if (!formData.value || formData.value === '' || Number(formData.value) < 0 || Number(formData.value) > 100) {
+      alert('Пожалуйста, введите оценку от 0 до 100');
+      return;
+    }
+    
     try {
+      const payload = {
+        studentId: Number(formData.studentId),
+        subjectId: Number(formData.subjectId),
+        value: Number(formData.value)
+      };
+
+      console.log('Отправка оценки:', payload); // Для отладки
+
       if (editingGrade) {
-        // Update existing grade
-        await updateGrade(editingGrade.id, formData);
+        await updateGrade(editingGrade.id, payload);
       } else {
-        // Create new grade
-        await createGrade(formData);
+        await createGrade(payload);
       }
       
-      // Reset form and reload data
-      setFormData({ studentId: '', subjectId: '', grade: '', date: '' });
+      setFormData({ studentId: '', subjectId: '', value: '' });
       setEditingGrade(null);
       setShowModal(false);
-      loadGrades();
+      loadData();
     } catch (error) {
       console.error('Failed to save grade:', error);
+      const errorMessage = error.message || (error.error ? JSON.stringify(error) : 'Неизвестная ошибка');
+      alert('Ошибка при сохранении оценки: ' + errorMessage);
     }
   };
 
   const handleEdit = (grade) => {
-    // Find student and subject IDs
-    const student = students.find(s => s.name === grade.student);
-    const subject = subjects.find(s => s.name === grade.subject);
-    
     setEditingGrade(grade);
     setFormData({
-      studentId: student ? student.id : '',
-      subjectId: subject ? subject.id : '',
-      grade: grade.grade,
-      date: grade.date
+      studentId: grade.student?.id || '',
+      subjectId: grade.subject?.id || '',
+      value: grade.value || ''
     });
     setShowModal(true);
   };
@@ -118,44 +117,46 @@ const TeacherGrades = () => {
     if (window.confirm('Вы уверены, что хотите удалить эту оценку?')) {
       try {
         await deleteGrade(id);
-        loadGrades();
+        loadData();
       } catch (error) {
         console.error('Failed to delete grade:', error);
+        alert('Ошибка при удалении оценки');
       }
     }
   };
 
-  // Apply filters
+  const getStudentName = (studentId) => {
+    const student = students.find(s => s.id === studentId);
+    return student?.user?.name || 'Неизвестно';
+  };
+
+  const getSubjectName = (subjectId) => {
+    const subject = subjects.find(s => s.id === subjectId);
+    return subject?.name || 'Неизвестно';
+  };
+
+  const convertTo5Point = (value) => {
+    if (value >= 90) return 5;
+    if (value >= 75) return 4;
+    if (value >= 60) return 3;
+    if (value >= 40) return 2;
+    return 1;
+  };
+
   const filteredGrades = grades.filter(grade => {
-    if (filters.subject && grade.subject !== filters.subject) return false;
-    if (filters.student && grade.student !== filters.student) return false;
+    if (filters.subjectId && grade.subject?.id !== filters.subjectId) return false;
+    if (filters.studentId && grade.student?.id !== filters.studentId) return false;
     return true;
   });
 
-  const tableColumns = [
-    { key: 'student', header: 'Студент' },
-    { key: 'subject', header: 'Предмет' },
-    { key: 'grade', header: 'Оценка' },
-    { key: 'date', header: 'Дата' }
-  ];
-
-  const tableActions = [
-    { name: 'edit', label: 'Редактировать', type: 'primary' },
-    { name: 'delete', label: 'Удалить', type: 'danger' }
-  ];
-
-  const handleAction = (action, grade) => {
-    switch (action) {
-      case 'edit':
-        handleEdit(grade);
-        break;
-      case 'delete':
-        handleDelete(grade.id);
-        break;
-      default:
-        break;
-    }
-  };
+  const displayGrades = filteredGrades.map(grade => ({
+    id: grade.id,
+    studentName: getStudentName(grade.student?.id),
+    subjectName: getSubjectName(grade.subject?.id),
+    value: grade.value,
+    grade5: convertTo5Point(grade.value),
+    original: grade
+  }));
 
   return (
     <div className="app">
@@ -164,12 +165,12 @@ const TeacherGrades = () => {
         <Sidebar role="teacher" />
         <main className="main-content">
           <div className="page-header">
-            <h1>Оценки</h1>
+            <h1>Оценки студентов</h1>
             <button 
               className="btn btn-primary"
               onClick={() => {
                 setEditingGrade(null);
-                setFormData({ studentId: '', subjectId: '', grade: '', date: '' });
+                setFormData({ studentId: '', subjectId: '', value: '' });
                 setShowModal(true);
               }}
             >
@@ -177,32 +178,36 @@ const TeacherGrades = () => {
             </button>
           </div>
           
-          <div className="page-filters">
-            <div className="form-group">
+          <div className="page-filters" style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label style={{ marginBottom: '8px', display: 'block', fontWeight: '600' }}>Фильтр по предмету:</label>
               <select
-                name="subject"
-                value={filters.subject}
+                name="subjectId"
+                value={filters.subjectId || ''}
                 onChange={handleFilterChange}
+                style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', width: '100%' }}
               >
                 <option value="">Все предметы</option>
                 {subjects.map(subject => (
-                  <option key={subject.id} value={subject.name}>
+                  <option key={subject.id} value={subject.id}>
                     {subject.name}
                   </option>
                 ))}
               </select>
             </div>
             
-            <div className="form-group">
+            <div className="form-group" style={{ flex: 1 }}>
+              <label style={{ marginBottom: '8px', display: 'block', fontWeight: '600' }}>Фильтр по студенту:</label>
               <select
-                name="student"
-                value={filters.student}
+                name="studentId"
+                value={filters.studentId || ''}
                 onChange={handleFilterChange}
+                style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', width: '100%' }}
               >
                 <option value="">Все студенты</option>
                 {students.map(student => (
-                  <option key={student.id} value={student.name}>
-                    {student.name}
+                  <option key={student.id} value={student.id}>
+                    {student.user?.name || `Студент #${student.id}`}
                   </option>
                 ))}
               </select>
@@ -211,19 +216,80 @@ const TeacherGrades = () => {
           
           {loading ? (
             <div className="loading">Загрузка...</div>
+          ) : displayGrades.length === 0 ? (
+            <div style={{ 
+              padding: '48px', 
+              textAlign: 'center', 
+              color: '#6b7280',
+              background: '#f9fafb',
+              borderRadius: '12px'
+            }}>
+              <p style={{ fontSize: '18px' }}>Оценки не найдены. Добавьте первую оценку.</p>
+            </div>
           ) : (
-            <Table 
-              columns={tableColumns}
-              data={filteredGrades}
-              actions={tableActions}
-              onAction={handleAction}
-            />
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <thead>
+                  <tr style={{ background: '#f3f4f6' }}>
+                    <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Студент</th>
+                    <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Предмет</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Оценка (0-100)</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Оценка (5-балл)</th>
+                    <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Действия</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayGrades.map((grade) => (
+                    <tr key={grade.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <td style={{ padding: '16px' }}>{grade.studentName}</td>
+                      <td style={{ padding: '16px' }}>{grade.subjectName}</td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontWeight: '600' }}>{grade.value}</td>
+                      <td style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: grade.grade5 >= 4 ? '#16a34a' : grade.grade5 >= 3 ? '#f59e0b' : '#dc2626' }}>
+                        {grade.grade5}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                          <button
+                            onClick={() => handleEdit(grade.original)}
+                            style={{
+                              padding: '8px 16px',
+                              background: '#3b82f6',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '14px'
+                            }}
+                          >
+                            Редактировать
+                          </button>
+                          <button
+                            onClick={() => handleDelete(grade.id)}
+                            style={{
+                              padding: '8px 16px',
+                              background: '#ef4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '14px'
+                            }}
+                          >
+                            Удалить
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
           
           {/* Modal for adding/editing grade */}
           {showModal && (
-            <div className="modal-overlay">
-              <div className="modal">
+            <div className="modal-overlay" onClick={() => setShowModal(false)}>
+              <div className="modal" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
                   <h2>{editingGrade ? 'Редактировать оценку' : 'Добавить оценку'}</h2>
                   <button 
@@ -239,14 +305,15 @@ const TeacherGrades = () => {
                     <select
                       id="studentId"
                       name="studentId"
-                      value={formData.studentId}
+                      value={formData.studentId || ''}
                       onChange={handleInputChange}
                       required
+                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', width: '100%' }}
                     >
                       <option value="">Выберите студента</option>
                       {students.map(student => (
                         <option key={student.id} value={student.id}>
-                          {student.name}
+                          {student.user?.name || `Студент #${student.id}`}
                         </option>
                       ))}
                     </select>
@@ -257,9 +324,10 @@ const TeacherGrades = () => {
                     <select
                       id="subjectId"
                       name="subjectId"
-                      value={formData.subjectId}
+                      value={formData.subjectId || ''}
                       onChange={handleInputChange}
                       required
+                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', width: '100%' }}
                     >
                       <option value="">Выберите предмет</option>
                       {subjects.map(subject => (
@@ -271,32 +339,23 @@ const TeacherGrades = () => {
                   </div>
                   
                   <div className="form-group">
-                    <label htmlFor="grade">Оценка</label>
-                    <select
-                      id="grade"
-                      name="grade"
-                      value={formData.grade}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="">Выберите оценку</option>
-                      <option value="2">2</option>
-                      <option value="3">3</option>
-                      <option value="4">4</option>
-                      <option value="5">5</option>
-                    </select>
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor="date">Дата</label>
+                    <label htmlFor="value">Оценка (0-100 баллов)</label>
                     <input
-                      type="date"
-                      id="date"
-                      name="date"
-                      value={formData.date}
+                      type="number"
+                      id="value"
+                      name="value"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={formData.value || ''}
                       onChange={handleInputChange}
+                      placeholder="Введите оценку от 0 до 100"
                       required
+                      style={{ padding: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', width: '100%' }}
                     />
+                    <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      Система автоматически конвертирует в 5-балльную шкалу (90-100 = 5, 75-89 = 4, 60-74 = 3, 40-59 = 2, 0-39 = 1)
+                    </small>
                   </div>
                   
                   <div className="modal-footer">

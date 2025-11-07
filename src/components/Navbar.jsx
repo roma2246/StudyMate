@@ -1,23 +1,28 @@
 // src/components/Navbar.jsx
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { logout, getUserName, getUserRole } from '../services/auth';
 
 const Navbar = ({ role }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const userName = getUserName();
   const userRole = getUserRole();
+  
+  // Если роль не передана, определяем её из URL или из localStorage
+  const actualRole = role || (location.pathname.startsWith('/teacher') ? 'teacher' : location.pathname.startsWith('/student') ? 'student' : userRole || 'student');
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    const defaultRole = userRole || 'student';
+    navigate(`/${defaultRole}/login`);
   };
 
   const getRoleBadge = () => {
-    if (role === 'teacher') {
+    if (actualRole === 'teacher') {
       return (
         <div style={styles.roleBadge}>
-          👨‍🏫 Администратор
+          👨‍🏫 Учитель
         </div>
       );
     }
@@ -31,7 +36,7 @@ const Navbar = ({ role }) => {
   return (
     <nav style={styles.navbar}>
       <div style={styles.navLeft}>
-        <Link to={`/${role}/dashboard`} style={styles.logo}>
+        <Link to={`/${actualRole}/dashboard`} style={styles.logo}>
           StudyMate
         </Link>
         {getRoleBadge()}
@@ -43,7 +48,7 @@ const Navbar = ({ role }) => {
           <span style={styles.userName}>{userName}</span>
         </div>
         
-        {role === 'teacher' && (
+        {actualRole === 'teacher' && (
           <button 
             onClick={() => navigate('/debug')}
             style={styles.debugButton}

@@ -1,14 +1,17 @@
 // src/components/Sidebar.jsx
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { getUserRole } from '../services/auth';
 
 const Sidebar = ({ role }) => {
   const location = useLocation();
+  
+  // Если роль не передана, определяем её из URL или из localStorage
+  const actualRole = role || (location.pathname.startsWith('/teacher') ? 'teacher' : location.pathname.startsWith('/student') ? 'student' : getUserRole() || 'student');
 
   const studentMenu = [
     { path: '/student/dashboard', label: 'Главная', icon: '🏠' },
     { path: '/student/grades', label: 'Оценки', icon: '📊' },
-    { path: '/student/courses', label: 'Курсы', icon: '📚' },
     { path: '/student/assignments', label: 'Задания', icon: '📝' },
     { path: '/student/schedule', label: 'Расписание', icon: '📅' },
     { path: '/student/profile', label: 'Профиль', icon: '👤' }
@@ -19,12 +22,13 @@ const Sidebar = ({ role }) => {
     { path: '/teacher/students', label: 'Студенты', icon: '👨‍🎓' },
     { path: '/teacher/subjects', label: 'Предметы', icon: '📚' },
     { path: '/teacher/grades', label: 'Оценки', icon: '📝' },
+    { path: '/teacher/assignments', label: 'Задания', icon: '📋' },
     { path: '/teacher/rating', label: 'Рейтинг', icon: '🏆' },
     { path: '/teacher/schedule', label: 'Расписание', icon: '📅' },
     { path: '/teacher/profile', label: 'Профиль', icon: '👤' }
   ];
 
-  const menu = role === 'student' ? studentMenu : teacherMenu;
+  const menu = actualRole === 'student' ? studentMenu : teacherMenu;
 
   const isActive = (path) => {
     return location.pathname === path;
@@ -34,7 +38,7 @@ const Sidebar = ({ role }) => {
     <aside style={styles.sidebar}>
       <div style={styles.sidebarHeader}>
         <h3 style={styles.sidebarTitle}>
-          {role === 'teacher' ? '👨‍🏫 Панель управления' : '🎓 Навигация'}
+          {actualRole === 'teacher' ? '👨‍🏫 Панель управления' : '🎓 Навигация'}
         </h3>
       </div>
       <nav style={styles.nav}>
@@ -54,7 +58,7 @@ const Sidebar = ({ role }) => {
         ))}
       </nav>
       
-      {role === 'teacher' && (
+      {actualRole === 'teacher' && (
         <div style={styles.adminSection}>
           <div style={styles.adminBadge}>🔐 Админ-доступ</div>
           <div style={styles.adminText}>Полные права управления</div>

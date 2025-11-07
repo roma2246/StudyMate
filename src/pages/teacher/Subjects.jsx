@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import Table from '../../components/Table';
-import { getSubjects, createSubject, updateSubject, deleteSubject } from '../../services/api';
+import { getSubjects, createSubject, updateSubject, deleteSubject, getGrades } from '../../services/api';
 
 const TeacherSubjects = () => {
   const [subjects, setSubjects] = useState([]);
@@ -11,8 +11,7 @@ const TeacherSubjects = () => {
   const [editingSubject, setEditingSubject] = useState(null);
   
   const [formData, setFormData] = useState({
-    name: '',
-    teacher: ''
+    name: ''
   });
 
   useEffect(() => {
@@ -22,17 +21,33 @@ const TeacherSubjects = () => {
   const loadSubjects = async () => {
     try {
       setLoading(true);
-      // In a real app, this would be an actual API call
-      const mockSubjects = [
-        { id: 1, name: 'Математика', teacher: 'Иванов И.И.', gradesCount: 25 },
-        { id: 2, name: 'Физика', teacher: 'Петрова М.А.', gradesCount: 20 },
-        { id: 3, name: 'Химия', teacher: 'Сидоров А.С.', gradesCount: 18 },
-        { id: 4, name: 'Биология', teacher: 'Козлова Е.В.', gradesCount: 22 },
-        { id: 5, name: 'Информатика', teacher: 'Смирнов Д.А.', gradesCount: 30 }
-      ];
-      setSubjects(mockSubjects);
+      // Получаем предметы из БД
+      const subjectsData = await getSubjects();
+      if (Array.isArray(subjectsData)) {
+        // Получаем оценки для подсчета количества оценок по каждому предмету
+        const grades = await getGrades();
+        
+        // Форматируем данные для отображения
+        const formattedSubjects = subjectsData.map(subject => {
+          // Подсчитываем количество оценок по этому предмету
+          const gradesCount = Array.isArray(grades) 
+            ? grades.filter(grade => grade.subject?.id === subject.id).length 
+            : 0;
+          
+          return {
+            id: subject.id,
+            name: subject.name,
+            gradesCount: gradesCount
+          };
+        });
+        
+        setSubjects(formattedSubjects);
+      } else {
+        setSubjects([]);
+      }
     } catch (error) {
       console.error('Failed to load subjects:', error);
+      setSubjects([]);
     } finally {
       setLoading(false);
     }
@@ -52,14 +67,14 @@ const TeacherSubjects = () => {
     try {
       if (editingSubject) {
         // Update existing subject
-        await updateSubject(editingSubject.id, formData);
+        await updateSubject(editingSubject.id, { name: formData.name });
       } else {
-        // Create new subject
-        await createSubject(formData);
+        // Create new subject - send only name, no ID
+        await createSubject({ name: formData.name });
       }
       
       // Reset form and reload data
-      setFormData({ name: '', teacher: '' });
+      setFormData({ name: '' });
       setEditingSubject(null);
       setShowModal(false);
       loadSubjects();
@@ -71,8 +86,7 @@ const TeacherSubjects = () => {
   const handleEdit = (subject) => {
     setEditingSubject(subject);
     setFormData({
-      name: subject.name,
-      teacher: subject.teacher
+      name: subject.name
     });
     setShowModal(true);
   };
@@ -89,9 +103,9 @@ const TeacherSubjects = () => {
   };
 
   const tableColumns = [
-    { key: 'name', header: 'Название' },
-    { key: 'teacher', header: 'Преподаватель' },
-    { key: 'gradesCount', header: 'Количество оценок' }
+    { key: 'id', header: 'ID', width: '10%' },
+    { key: 'name', header: 'Название', width: '50%' },
+    { key: 'gradesCount', header: 'Количество оценок', width: '40%' }
   ];
 
   const tableActions = [
@@ -124,7 +138,7 @@ const TeacherSubjects = () => {
               className="btn btn-primary"
               onClick={() => {
                 setEditingSubject(null);
-                setFormData({ name: '', teacher: '' });
+                setFormData({ name: '' });
                 setShowModal(true);
               }}
             >
@@ -164,18 +178,6 @@ const TeacherSubjects = () => {
                       id="name"
                       name="name"
                       value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor="teacher">Преподаватель</label>
-                    <input
-                      type="text"
-                      id="teacher"
-                      name="teacher"
-                      value={formData.teacher}
                       onChange={handleInputChange}
                       required
                     />

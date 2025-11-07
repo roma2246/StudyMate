@@ -6,13 +6,21 @@ import Sidebar from '../../components/Sidebar';
 import Card from '../../components/Card';
 import Chart from '../../components/Chart';
 import Table from '../../components/Table';
-import { getUserName, isAuthenticated } from '../../services/auth';
+import { getUserName, isAuthenticated, getCurrentUser } from '../../services/auth';
+import { getStudentByUserId, getGradesByStudent, getStudentGPA, getAssignmentsByStudent } from '../../services/api';
+import { getSubjects } from '../../services/api';
 
 const StudentDashboard = () => {
   const [gpaData, setGpaData] = useState([]);
   const [gradeDistribution, setGradeDistribution] = useState([]);
   const [recentGrades, setRecentGrades] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
+  const [stats, setStats] = useState({
+    averageGPA: 0,
+    completedAssignments: 0,
+    totalAssignments: 0,
+    upcomingAssignments: 0
+  });
   const [loading, setLoading] = useState(true);
   const studentName = getUserName();
   const navigate = useNavigate();
@@ -29,100 +37,193 @@ const StudentDashboard = () => {
     try {
       setLoading(true);
       
-      // Mock GPA data by subject
-      const mockGpaData = [
-        { label: 'Математика', value: 4.5, color: '#3b82f6' },
-        { label: 'Физика', value: 4.0, color: '#ef4444' },
-        { label: 'Химия', value: 3.8, color: '#10b981' },
-        { label: 'Биология', value: 4.2, color: '#f59e0b' },
-        { label: 'Информатика', value: 5.0, color: '#8b5cf6' }
-      ];
-      
-      setGpaData(mockGpaData);
-      
-      // Mock grade distribution (for pie chart)
-      const mockDistribution = [
-        { label: 'Отлично (5)', value: 12, color: '#10b981' },
-        { label: 'Хорошо (4)', value: 9, color: '#3b82f6' },
-        { label: 'Удовлетворительно (3)', value: 3, color: '#f59e0b' },
-        { label: 'Неудовлетворительно (2)', value: 1, color: '#ef4444' }
-      ];
-      setGradeDistribution(mockDistribution);
-      
-      // Mock recent grades
-      const mockGrades = [
-        { 
-          id: 1,
-          subject: 'Математика', 
-          grade: 5, 
-          date: '2023-10-15',
-          type: 'Контрольная работа',
-          teacher: 'Иванова А.П.'
-        },
-        { 
-          id: 2,
-          subject: 'Физика', 
-          grade: 4, 
-          date: '2023-10-14',
-          type: 'Лабораторная работа',
-          teacher: 'Петров С.М.'
-        },
-        { 
-          id: 3,
-          subject: 'Химия', 
-          grade: 4, 
-          date: '2023-10-13',
-          type: 'Тест',
-          teacher: 'Сидорова О.И.'
-        },
-        { 
-          id: 4,
-          subject: 'Биология', 
-          grade: 5, 
-          date: '2023-10-12',
-          type: 'Проект',
-          teacher: 'Козлова Е.В.'
-        },
-        { 
-          id: 5,
-          subject: 'Информатика', 
-          grade: 5, 
-          date: '2023-10-11',
-          type: 'Практическая работа',
-          teacher: 'Николаев Д.С.'
-        }
-      ];
-      
-      setRecentGrades(mockGrades);
+      const currentUser = getCurrentUser();
+      if (!currentUser || !currentUser.id) {
+        console.error('User not authenticated');
+        return;
+      }
 
-      // Mock upcoming items (assignments/exams)
-      const mockUpcoming = [
-        { 
-          id: 1,
-          type: 'Домашнее задание', 
-          subject: 'Физика', 
-          dueDate: '2023-10-20',
-          priority: 'high',
-          description: 'Задачи по термодинамике'
-        },
-        { 
-          id: 2,
-          type: 'Контрольная', 
-          subject: 'Химия', 
-          dueDate: '2023-10-22',
-          priority: 'medium',
-          description: 'Органическая химия'
-        },
-        { 
-          id: 3,
-          type: 'Проект', 
-          subject: 'Информатика', 
-          dueDate: '2023-10-28',
-          priority: 'low',
-          description: 'Разработка веб-приложения'
+      // Получаем студента по userId
+      const student = await getStudentByUserId(currentUser.id);
+      if (!student || !student.id) {
+        console.error('Student not found for userId:', currentUser.id);
+        return;
+      }
+
+      console.log('Found student:', student.id);
+
+      // Получаем оценки студента
+      let grades = [];
+      try {
+        grades = await getGradesByStudent(student.id);
+        console.log('Loaded grades:', grades?.length || 0, grades);
+      } catch (error) {
+        console.error('Failed to load grades:', error);
+        grades = [];
+      }
+      
+      // Если grades не массив, пытаемся преобразовать
+      if (!Array.isArray(grades)) {
+        console.warn('Grades is not an array:', grades);
+        grades = [];
+      }
+      
+      // Получаем средний GPA
+      let averageGPA = 0;
+      try {
+        const gpaResponse = await getStudentGPA(student.id);
+        // API возвращает объект {gpa: number, totalGrades: number}
+        averageGPA = gpaResponse?.gpa || 0;
+      } catch (error) {
+        console.warn('Could not get GPA:', error);
+        // Рассчитываем GPA из оценок (конвертируем из 100-балльной в 5-балльную)
+        if (grades && grades.length > 0) {
+          const sum = grades.reduce((acc, g) => {
+            const val = g.value || 0;
+            // Конвертируем в 5-балльную систему
+            const val5 = val / 20;
+            return acc + val5;
+          }, 0);
+          averageGPA = sum / grades.length;
         }
-      ];
-      setUpcoming(mockUpcoming);
+      }
+
+      // Получаем предметы для названий
+      const subjects = await getSubjects();
+      const subjectsMap = new Map(subjects.map(s => [s.id, s.name]));
+
+      // Рассчитываем GPA по предметам
+      const gpaBySubject = {};
+      const subjectCounts = {};
+      
+      grades.forEach(grade => {
+        const subjectId = grade.subject?.id || grade.subjectId;
+        const subjectName = subjectsMap.get(subjectId) || 'Неизвестный предмет';
+        
+        if (!gpaBySubject[subjectName]) {
+          gpaBySubject[subjectName] = 0;
+          subjectCounts[subjectName] = 0;
+        }
+        gpaBySubject[subjectName] += grade.value || 0;
+        subjectCounts[subjectName]++;
+      });
+
+      const gpaDataArray = Object.keys(gpaBySubject).map((subjectName, index) => {
+        const avg = gpaBySubject[subjectName] / subjectCounts[subjectName];
+        // Конвертируем 100-балльную систему в 5-балльную для отображения
+        const avg5 = (avg / 20); // 100/5 = 20
+        const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
+        return {
+          label: subjectName,
+          value: Math.round(avg5 * 10) / 10,
+          color: colors[index % colors.length]
+        };
+      }).sort((a, b) => b.value - a.value);
+      
+      setGpaData(gpaDataArray);
+
+      // Распределение оценок
+      // Оценки могут быть от 0 до 100, нужно конвертировать в 5-балльную систему
+      const distribution = {
+        5: 0, 4: 0, 3: 0, 2: 0, 1: 0
+      };
+      
+      grades.forEach(grade => {
+        const value = grade.value;
+        if (value != null) {
+          // Конвертируем 100-балльную систему в 5-балльную
+          let grade5 = 1;
+          if (value >= 90) grade5 = 5;
+          else if (value >= 75) grade5 = 4;
+          else if (value >= 60) grade5 = 3;
+          else if (value >= 40) grade5 = 2;
+          else grade5 = 1;
+          
+          distribution[grade5]++;
+        }
+      });
+
+      const gradeDistributionArray = [
+        { label: 'Отлично (5)', value: distribution[5], color: '#10b981' },
+        { label: 'Хорошо (4)', value: distribution[4], color: '#3b82f6' },
+        { label: 'Удовлетворительно (3)', value: distribution[3], color: '#f59e0b' },
+        { label: 'Неудовлетворительно (2)', value: distribution[2], color: '#ef4444' },
+        { label: 'Плохо (1)', value: distribution[1], color: '#991b1b' }
+      ].filter(item => item.value > 0);
+      
+      setGradeDistribution(gradeDistributionArray);
+
+      // Последние оценки (последние 5)
+      // Сортируем по ID (последние = больший ID)
+      const recentGradesArray = grades
+        .sort((a, b) => (b.id || 0) - (a.id || 0))
+        .slice(0, 5)
+        .map(grade => ({
+          id: grade.id,
+          subject: subjectsMap.get(grade.subject?.id || grade.subjectId) || 'Неизвестный предмет',
+          grade: grade.value,
+          date: new Date().toLocaleDateString('ru-RU'), // Используем текущую дату, т.к. createdAt нет в модели
+          type: 'Оценка',
+          teacher: 'Преподаватель' // Teacher нет в модели Grade
+        }));
+      
+      setRecentGrades(recentGradesArray);
+
+      // Получаем задания студента
+      const assignments = await getAssignmentsByStudent(currentUser.id);
+      
+      // Фильтруем задания по дедлайну (ближайшие 7 дней)
+      const now = new Date();
+      const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      
+      const upcomingAssignments = assignments
+        .filter(a => {
+          const deadline = new Date(a.deadline);
+          return deadline >= now && deadline <= weekFromNow;
+        })
+        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+        .slice(0, 5)
+        .map(a => {
+          const deadline = new Date(a.deadline);
+          const daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+          
+          let priority = 'low';
+          if (daysUntil <= 1) priority = 'high';
+          else if (daysUntil <= 3) priority = 'medium';
+          
+          return {
+            id: a.id,
+            type: 'Задание',
+            subject: subjectsMap.get(a.subject?.id || a.subjectId) || 'Неизвестный предмет',
+            dueDate: a.deadline,
+            priority: priority,
+            description: a.description || a.title
+          };
+        });
+      
+      setUpcoming(upcomingAssignments);
+
+      // Подсчитываем статистику
+      const completedSubmissions = assignments.filter(a => {
+        // Проверяем, есть ли submission для этого задания
+        // Пока используем простую логику: если deadline прошел, считаем выполненным
+        return new Date(a.deadline) < now;
+      }).length;
+
+      setStats({
+        averageGPA: Math.round(averageGPA * 10) / 10,
+        completedAssignments: completedSubmissions,
+        totalAssignments: assignments.length || 0,
+        upcomingAssignments: upcomingAssignments.length || 0
+      });
+
+      console.log('Dashboard stats:', {
+        averageGPA,
+        gradesCount: grades.length,
+        assignmentsCount: assignments.length,
+        upcomingCount: upcomingAssignments.length
+      });
+
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -196,34 +297,31 @@ const StudentDashboard = () => {
               <div style={styles.dashboardStats}>
                 <Card 
                   title="Средний балл" 
-                  value="4.3" 
+                  value={stats.averageGPA || 0} 
                   subtitle="из 5.0"
                   icon="📊" 
                   color="purple" 
-                  trend="+0.2"
                 />
                 <Card 
                   title="Завершено заданий" 
-                  value="18" 
-                  subtitle="из 21"
+                  value={stats.completedAssignments || 0} 
+                  subtitle={`из ${stats.totalAssignments || 0}`}
                   icon="✅" 
                   color="green" 
-                  trend="+3"
                 />
                 <Card 
                   title="Ожидает сдачи" 
-                  value="3" 
+                  value={stats.upcomingAssignments || 0} 
                   subtitle="ближайшие 7 дней"
                   icon="⏳" 
                   color="yellow" 
                 />
                 <Card 
-                  title="Посещаемость" 
-                  value="92%" 
-                  subtitle="в этом месяце"
+                  title="Всего заданий" 
+                  value={stats.totalAssignments || 0} 
+                  subtitle="в системе"
                   icon="📅" 
                   color="blue" 
-                  trend="+5%"
                 />
               </div>
               
