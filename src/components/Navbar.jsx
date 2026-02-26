@@ -1,64 +1,77 @@
 // src/components/Navbar.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { logout, getUserName, getUserRole } from '../services/auth';
 
 const Navbar = ({ role }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const userName = getUserName();
+  const userName = getUserName() || 'Пользователь';
   const userRole = getUserRole();
-  
-  // Если роль не передана, определяем её из URL или из localStorage
-  const actualRole = role || (location.pathname.startsWith('/teacher') ? 'teacher' : location.pathname.startsWith('/student') ? 'student' : userRole || 'student');
+  const [hoverLogout, setHoverLogout] = useState(false);
+
+  const actualRole = role || (
+    location.pathname.startsWith('/teacher') ? 'teacher' :
+      location.pathname.startsWith('/student') ? 'student' :
+        userRole || 'student'
+  );
 
   const handleLogout = () => {
     logout();
-    const defaultRole = userRole || 'student';
-    navigate(`/${defaultRole}/login`);
+    navigate(`/${userRole || 'student'}/login`);
   };
 
-  const getRoleBadge = () => {
-    if (actualRole === 'teacher') {
-      return (
-        <div style={styles.roleBadge}>
-          👨‍🏫 Учитель
-        </div>
-      );
-    }
-    return (
-      <div style={styles.studentBadge}>
-        🎓 Студент
-      </div>
-    );
-  };
+  const initials = userName
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  const isTeacher = actualRole === 'teacher';
 
   return (
     <nav style={styles.navbar}>
-      <div style={styles.navLeft}>
-        <Link to={`/${actualRole}/dashboard`} style={styles.logo}>
-          StudyMate
-        </Link>
-        {getRoleBadge()}
-      </div>
-      
-      <div style={styles.navRight}>
-        <div style={styles.userInfo}>
-          <span style={styles.welcome}>Добро пожаловать,</span>
-          <span style={styles.userName}>{userName}</span>
+      {/* Left: Logo */}
+      <Link to={`/${actualRole}/dashboard`} style={styles.logo}>
+        <div style={styles.logoIcon}>📚</div>
+        <div style={styles.logoTexts}>
+          <span style={styles.logoText}>StudyMate</span>
+          <span style={styles.logoSub}>{isTeacher ? 'УЧИТЕЛЬ' : 'СТУДЕНТ'}</span>
         </div>
-        
-        {actualRole === 'teacher' && (
-          <button 
-            onClick={() => navigate('/debug')}
-            style={styles.debugButton}
-          >
-            🛠 Отладка
-          </button>
-        )}
-        
-        <button onClick={handleLogout} style={styles.logoutButton}>
-          🚪 Выйти
+      </Link>
+
+      {/* Right */}
+      <div style={styles.right}>
+        {/* Role badge */}
+        <div style={isTeacher ? styles.badgeTeacher : styles.badgeStudent}>
+          {isTeacher ? '👨‍🏫 Преподаватель' : '🎓 Студент'}
+        </div>
+
+        {/* User info */}
+        <div style={styles.userBlock}>
+          <div style={{
+            ...styles.avatar,
+            background: isTeacher
+              ? 'linear-gradient(135deg, #8b5cf6, #5b21b6)'
+              : 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
+          }}>
+            {initials}
+          </div>
+          <div style={styles.userInfo}>
+            <span style={styles.userName}>{userName}</span>
+            <span style={styles.userRole}>{isTeacher ? 'Преподаватель' : 'Студент'}</span>
+          </div>
+        </div>
+
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          style={hoverLogout ? { ...styles.logoutBtn, ...styles.logoutBtnHover } : styles.logoutBtn}
+          onMouseEnter={() => setHoverLogout(true)}
+          onMouseLeave={() => setHoverLogout(false)}
+        >
+          Выйти
         </button>
       </div>
     </nav>
@@ -70,87 +83,127 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '1rem 2rem',
-    backgroundColor: '#ffffff',
-    borderBottom: '1px solid #e5e7eb',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    padding: '0 2rem',
+    height: '64px',
+    backgroundColor: 'rgba(10, 22, 40, 0.95)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 1px 24px rgba(0,0,0,0.3)',
     position: 'sticky',
     top: 0,
-    zIndex: 100
-  },
-  navLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1.5rem'
+    zIndex: 100,
   },
   logo: {
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    color: '#3b82f6',
-    textDecoration: 'none',
-    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
-  },
-  roleBadge: {
-    background: 'linear-gradient(135deg, #1e40af 0%, #3730a3 100%)',
-    color: 'white',
-    padding: '0.25rem 0.75rem',
-    borderRadius: '12px',
-    fontSize: '0.75rem',
-    fontWeight: '600'
-  },
-  studentBadge: {
-    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-    color: 'white',
-    padding: '0.25rem 0.75rem',
-    borderRadius: '12px',
-    fontSize: '0.75rem',
-    fontWeight: '600'
-  },
-  navRight: {
     display: 'flex',
     alignItems: 'center',
-    gap: '1rem'
+    gap: '0.75rem',
+    textDecoration: 'none',
+  },
+  logoIcon: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '10px',
+    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1.1rem',
+    flexShrink: 0,
+    boxShadow: '0 4px 12px rgba(59,130,246,0.4)',
+  },
+  logoTexts: {
+    display: 'flex',
+    flexDirection: 'column',
+    lineHeight: 1.1,
+  },
+  logoText: {
+    fontSize: '1rem',
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: '-0.01em',
+  },
+  logoSub: {
+    fontSize: '0.625rem',
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.35)',
+    letterSpacing: '0.08em',
+  },
+  right: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.875rem',
+  },
+  badgeTeacher: {
+    padding: '0.3rem 0.75rem',
+    borderRadius: '20px',
+    background: 'rgba(139,92,246,0.15)',
+    color: '#c4b5fd',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    border: '1px solid rgba(139,92,246,0.3)',
+  },
+  badgeStudent: {
+    padding: '0.3rem 0.75rem',
+    borderRadius: '20px',
+    background: 'rgba(59,130,246,0.15)',
+    color: '#93c5fd',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    border: '1px solid rgba(59,130,246,0.3)',
+  },
+  userBlock: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.625rem',
+    padding: '0.375rem 0.75rem',
+    background: 'rgba(255,255,255,0.05)',
+    borderRadius: '10px',
+    border: '1px solid rgba(255,255,255,0.08)',
+  },
+  avatar: {
+    width: '30px',
+    height: '30px',
+    borderRadius: '50%',
+    color: 'white',
+    fontWeight: '800',
+    fontSize: '0.75rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   userInfo: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-end',
-    gap: '0.125rem'
-  },
-  welcome: {
-    color: '#6b7280',
-    fontSize: '0.75rem'
+    lineHeight: 1.2,
   },
   userName: {
-    color: '#374151',
-    fontSize: '0.875rem',
-    fontWeight: '600'
+    fontSize: '0.8125rem',
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.9)',
   },
-  debugButton: {
-    padding: '0.5rem 1rem',
-    backgroundColor: '#8b5cf6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '0.375rem',
-    cursor: 'pointer',
-    fontSize: '0.75rem',
+  userRole: {
+    fontSize: '0.65rem',
+    color: 'rgba(255,255,255,0.4)',
     fontWeight: '500',
-    transition: 'all 0.2s ease'
   },
-  logoutButton: {
-    padding: '0.5rem 1rem',
-    backgroundColor: '#ef4444',
-    color: 'white',
-    border: 'none',
-    borderRadius: '0.375rem',
+  logoutBtn: {
+    padding: '0.4375rem 1rem',
+    border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: '8px',
+    background: 'rgba(255,255,255,0.06)',
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: '0.8125rem',
+    fontWeight: '600',
     cursor: 'pointer',
-    fontSize: '0.875rem',
-    fontWeight: '500',
-    transition: 'all 0.2s ease'
-  }
+    transition: 'all 0.18s ease',
+  },
+  logoutBtnHover: {
+    background: 'rgba(239,68,68,0.15)',
+    borderColor: 'rgba(239,68,68,0.4)',
+    color: '#f87171',
+  },
 };
 
 export default Navbar;

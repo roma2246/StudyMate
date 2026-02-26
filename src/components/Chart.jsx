@@ -1,169 +1,151 @@
 import React from 'react';
 
-const Chart = ({ type, title, data }) => {
+const Chart = ({ type, title, data = [] }) => {
+  const safeData = Array.isArray(data) ? data : [];
+
   const renderBarChart = () => {
-    const maxValue = Math.max(...data.map(item => item.value));
-    
+    const maxVal = Math.max(...safeData.map(d => d.value), 1);
     return (
-      <div style={styles.chartContainer}>
-        {data.map((item, index) => (
-          <div key={index} style={styles.barItem}>
-            <div style={styles.barLabel}>{item.label}</div>
-            <div style={styles.barTrack}>
-              <div 
-                style={{
-                  ...styles.barFill,
-                  width: `${(item.value / maxValue) * 100}%`,
-                  backgroundColor: '#3b82f6'
-                }}
-              />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+        {safeData.length === 0 ? (
+          <div style={s.empty}>Нет данных</div>
+        ) : (
+          safeData.map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+              <div style={s.barLabel}>{item.label}</div>
+              <div style={s.barTrack}>
+                <div
+                  style={{
+                    ...s.barFill,
+                    width: `${(item.value / maxVal) * 100}%`,
+                    background: item.color || 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
+                  }}
+                />
+              </div>
+              <div style={{ ...s.barVal, color: item.color || '#60a5fa' }}>{item.value}</div>
             </div>
-            <div style={styles.barValue}>{item.value}</div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     );
   };
 
   const renderPieChart = () => {
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-    
+    const total = safeData.reduce((sum, d) => sum + d.value, 0) || 1;
+    let cumulative = 0;
+
+    const gradientParts = safeData.map((item, i) => {
+      const pct = (item.value / total) * 100;
+      const part = `${item.color || '#3b82f6'} ${cumulative.toFixed(1)}% ${(cumulative + pct).toFixed(1)}%`;
+      cumulative += pct;
+      return part;
+    }).join(', ');
+
+    const conicGradient = `conic-gradient(${gradientParts})`;
+
     return (
-      <div style={styles.pieContainer}>
-        <div style={styles.pieChart}>
-          {data.map((item, index) => {
-            const percentage = (item.value / data.reduce((sum, d) => sum + d.value, 0)) * 100;
-            return (
-              <div
-                key={index}
-                style={{
-                  ...styles.pieSegment,
-                  backgroundColor: colors[index % colors.length],
-                  transform: `rotate(${data.slice(0, index).reduce((sum, d) => sum + (d.value / data.reduce((total, item) => total + item.value, 0)) * 360, 0)}deg)`,
-                  clipPath: `conic-gradient(from 0deg at 50% 50%, ${colors[index % colors.length]} 0% ${percentage}%, transparent ${percentage}% 100%)`
-                }}
-              />
-            );
-          })}
-        </div>
-        <div style={styles.pieLegend}>
-          {data.map((item, index) => (
-            <div key={index} style={styles.legendItem}>
-              <div 
-                style={{
-                  ...styles.legendColor,
-                  backgroundColor: colors[index % colors.length]
-                }} 
-              />
-              <span style={styles.legendLabel}>{item.label}</span>
-              <span style={styles.legendValue}>({item.value})</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+        {safeData.length === 0 ? (
+          <div style={s.empty}>Нет данных</div>
+        ) : (
+          <>
+            <div style={{
+              width: '140px',
+              height: '140px',
+              borderRadius: '50%',
+              background: conicGradient,
+              flexShrink: 0,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', flex: 1 }}>
+              {safeData.map((item, i) => {
+                const pct = Math.round((item.value / total) * 100);
+                return (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{
+                      width: '10px', height: '10px', borderRadius: '50%',
+                      background: item.color || '#3b82f6', flexShrink: 0,
+                    }} />
+                    <span style={s.legendLabel}>{item.label}</span>
+                    <span style={{ ...s.legendVal, color: item.color || '#60a5fa' }}>
+                      {item.value} ({pct}%)
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+          </>
+        )}
       </div>
     );
   };
 
   return (
-    <div style={styles.chart}>
-      <h3 style={styles.chartTitle}>{title}</h3>
+    <div style={s.wrap}>
+      <h3 style={s.title}>{title}</h3>
       {type === 'bar' ? renderBarChart() : renderPieChart()}
     </div>
   );
 };
 
-const styles = {
-  chart: {
-    backgroundColor: 'white',
+const s = {
+  wrap: {
+    background: 'transparent',
     borderRadius: '12px',
-    padding: '1.5rem',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    border: '1px solid #e5e7eb'
   },
-  chartTitle: {
-    fontSize: '1.125rem',
-    fontWeight: '600',
-    color: '#1f2937',
-    margin: '0 0 1rem 0'
-  },
-  chartContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem'
-  },
-  barItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1rem'
+  title: {
+    fontSize: '0.9375rem',
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.9)',
+    margin: '0 0 1.25rem 0',
   },
   barLabel: {
-    width: '100px',
-    fontSize: '0.875rem',
-    color: '#6b7280',
-    textAlign: 'right'
+    width: '110px',
+    fontSize: '0.8125rem',
+    color: 'rgba(255,255,255,0.55)',
+    textAlign: 'right',
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    fontWeight: '500',
   },
   barTrack: {
     flex: 1,
-    height: '20px',
-    backgroundColor: '#f3f4f6',
-    borderRadius: '10px',
-    overflow: 'hidden'
+    height: '8px',
+    background: 'rgba(255,255,255,0.08)',
+    borderRadius: '100px',
+    overflow: 'hidden',
   },
   barFill: {
     height: '100%',
-    borderRadius: '10px',
-    transition: 'width 0.3s ease'
+    borderRadius: '100px',
+    transition: 'width 0.5s ease',
   },
-  barValue: {
-    width: '30px',
-    fontSize: '0.875rem',
-    fontWeight: '600',
-    color: '#1f2937',
-    textAlign: 'center'
-  },
-  pieContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '2rem'
-  },
-  pieChart: {
-    width: '150px',
-    height: '150px',
-    borderRadius: '50%',
-    backgroundColor: '#f3f4f6',
-    position: 'relative',
-    overflow: 'hidden'
-  },
-  pieSegment: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    borderRadius: '50%'
-  },
-  pieLegend: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem'
-  },
-  legendItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem'
-  },
-  legendColor: {
-    width: '12px',
-    height: '12px',
-    borderRadius: '2px'
+  barVal: {
+    width: '32px',
+    fontSize: '0.8125rem',
+    fontWeight: '700',
+    textAlign: 'right',
+    flexShrink: 0,
   },
   legendLabel: {
-    fontSize: '0.875rem',
-    color: '#6b7280'
+    fontSize: '0.8125rem',
+    color: 'rgba(255,255,255,0.55)',
+    flex: 1,
+    fontWeight: '500',
   },
-  legendValue: {
-    fontSize: '0.875rem',
-    fontWeight: '600',
-    color: '#1f2937'
-  }
+  legendVal: {
+    fontSize: '0.8125rem',
+    fontWeight: '700',
+  },
+  empty: {
+    color: 'rgba(255,255,255,0.25)',
+    fontSize: '0.9rem',
+    textAlign: 'center',
+    padding: '2rem 0',
+    fontWeight: '500',
+  },
 };
 
 export default Chart;

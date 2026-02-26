@@ -20,6 +20,7 @@ import TeacherProfile from './pages/teacher/Profile';
 import StudentSchedule from './pages/student/Schedule';
 import StudentAssignments from './pages/student/Assignments';
 import Debug from './pages/Debug';
+import Landing from './pages/Landing';
 
 // Защищенные маршруты
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -27,12 +28,12 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     const role = allowedRoles?.[0] || 'student';
     return <Navigate to={`/${role}/login`} replace />;
   }
-  
+
   const userRole = getUserRole();
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     return <Navigate to={`/${userRole}/dashboard`} replace />;
   }
-  
+
   return children;
 };
 
@@ -43,125 +44,125 @@ function App() {
         {/* Публичные маршруты - студенты */}
         <Route path="/student/login" element={<StudentLogin />} />
         <Route path="/student/register" element={<StudentRegister />} />
-        
+
         {/* Публичные маршруты - преподаватели */}
         <Route path="/teacher/login" element={<TeacherLogin />} />
         <Route path="/teacher/register" element={<TeacherRegister />} />
-        
+
         {/* Защищенные маршруты для студентов */}
-        <Route 
-          path="/student/dashboard" 
+        <Route
+          path="/student/dashboard"
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <StudentDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/student/grades" 
+        <Route
+          path="/student/grades"
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <StudentGrades />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/student/profile" 
+        <Route
+          path="/student/profile"
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <StudentProfile />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/student/schedule" 
+        <Route
+          path="/student/schedule"
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <StudentSchedule />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/student/assignments" 
+        <Route
+          path="/student/assignments"
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <StudentAssignments />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* Защищенные маршруты для преподавателей (админка) */}
-        <Route 
-          path="/teacher/dashboard" 
+        <Route
+          path="/teacher/dashboard"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <TeacherDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/teacher/students" 
+        <Route
+          path="/teacher/students"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <TeacherStudents />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/teacher/subjects" 
+        <Route
+          path="/teacher/subjects"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <TeacherSubjects />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/teacher/grades" 
+        <Route
+          path="/teacher/grades"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <TeacherGrades />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/teacher/rating" 
+        <Route
+          path="/teacher/rating"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <TeacherRating />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/teacher/schedule" 
+        <Route
+          path="/teacher/schedule"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <TeacherSchedule />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/teacher/assignments" 
+        <Route
+          path="/teacher/assignments"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <TeacherAssignments />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/teacher/profile" 
+        <Route
+          path="/teacher/profile"
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <TeacherProfile />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* Отладочный маршрут */}
         <Route path="/debug" element={<Debug />} />
-        
+
         {/* Реддирект по умолчанию */}
-        <Route path="/" element={<Navigate to="/student/login" replace />} />
-        
+        <Route path="/" element={<Landing />} />
+
         {/* Fallback для несуществующих маршрутов */}
         <Route path="*" element={<Navigate to="/student/login" replace />} />
       </Routes>

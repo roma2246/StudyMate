@@ -1,50 +1,46 @@
 // src/pages/student/Login.jsx
-import React, { useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, getUserRole } from '../../services/auth';
+import { NeuroNoise } from '@paper-design/shaders-react';
+
+const MemoizedNeuroNoise = memo(NeuroNoise);
 
 const StudentLogin = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+  const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  useEffect(() => {
+    const onResize = () => setSize({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!formData.username.trim() || !formData.password.trim()) {
       setError('Пожалуйста, заполните все поля');
       return;
     }
-    
     if (!formData.username.includes('@')) {
       setError('Введите корректный email с символом @');
       return;
     }
-
     setLoading(true);
     setError('');
-    
     try {
-      const result = await login(formData.username, formData.password);
+      await login(formData.username, formData.password);
       const role = getUserRole();
-      
       if (role !== 'student') {
         setError('Этот аккаунт не для студентов. Используйте вход для преподавателей.');
         return;
       }
-      
       navigate('/student/dashboard');
     } catch (err) {
       setError(err.message || 'Ошибка при входе в систему');
@@ -55,371 +51,439 @@ const StudentLogin = () => {
 
   return (
     <div style={styles.page}>
-      <div style={styles.gradientBackground}></div>
-      
-      <div style={styles.mainContainer}>
-        <div style={styles.leftSection}>
-          <div style={styles.logoSection}>
-            <h1 style={styles.logo}>StudyMate</h1>
-            <p style={styles.tagline}>Платформа для студентов</p>
-          </div>
-          
-          <div style={styles.features}>
-            <div style={styles.feature}>
-              <span style={styles.featureIcon}>📚</span>
-              <span style={styles.featureText}>Интерактивные курсы</span>
+      <style>{globalCSS}</style>
+
+      {/* NeuroNoise WebGL shader — full screen flow */}
+      <div style={styles.shaderWrap}>
+        <MemoizedNeuroNoise
+          colorBack="#0a1628"
+          colorFront="#1d4ed8"
+          colorAccent="#60a5fa"
+          speed={0.5}
+          style={{ display: 'block', width: '100%', height: '100%' }}
+        />
+      </div>
+      <div style={styles.overlay} />
+
+      <div style={styles.card}>
+        {/* Left panel */}
+        <div style={styles.left}>
+          {/* Dot grid decoration */}
+          <div style={styles.dotGrid} />
+          {/* Decorative circles */}
+          <div style={styles.circleTopRight} />
+          <div style={styles.circleBottomLeft} />
+
+          <div style={styles.leftContent}>
+            <div style={styles.brand}>
+              <div style={styles.brandPill}>Студентам</div>
+              <h1 style={styles.brandName}>StudyMate</h1>
+              <p style={styles.brandTagline}>Система управления учебным процессом</p>
             </div>
-            <div style={styles.feature}>
-              <span style={styles.featureIcon}>📊</span>
-              <span style={styles.featureText}>Детальная статистика</span>
+
+            {/* About block */}
+            <div style={styles.aboutBlock}>
+              <p style={styles.aboutText}>
+                StudyMate — это удобная система для студентов и преподавателей.
+                Здесь ты можешь следить за своими оценками, сдавать задания,
+                видеть расписание и отслеживать прогресс в обучении — всё в одном месте.
+              </p>
+              <div style={styles.divider} />
+              <p style={styles.aboutHint}>Войди в аккаунт, чтобы увидеть свой дашборд.</p>
             </div>
-            <div style={styles.feature}>
-              <span style={styles.featureIcon}>🎓</span>
-              <span style={styles.featureText}>Отслеживание прогресса</span>
+
+            {/* Feature lines */}
+            <div style={styles.features}>
+              {[
+                { num: '01', text: 'Интерактивные задания' },
+                { num: '02', text: 'Детальная статистика' },
+                { num: '03', text: 'Отслеживание прогресса' },
+              ].map(f => (
+                <div key={f.num} style={styles.feature}>
+                  <span style={styles.featureNum}>{f.num}</span>
+                  <div style={styles.featureLine} />
+                  <span style={styles.featureText}>{f.text}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        <div style={styles.rightSection}>
-          <div style={styles.formContainer}>
-            <div style={styles.formHeader}>
-              <h2 style={styles.formTitle}>Вход для студентов</h2>
-              <p style={styles.formSubtitle}>Войдите в свой аккаунт</p>
-            </div>
-            
+        {/* Right form */}
+        <div style={styles.right}>
+          <div style={styles.formWrap}>
+            <h2 style={styles.formTitle}>Вход для студентов</h2>
+            <p style={styles.formSub}>Войдите в свой аккаунт</p>
+
             {error && (
-              <div style={styles.errorAlert}>
-                <span style={styles.alertIcon}>⚠️</span>
-                {error}
+              <div style={styles.errorBox}>
+                <span>⚠️</span> {error}
               </div>
             )}
-            
+
             <form onSubmit={handleSubmit} style={styles.form}>
-              <div style={styles.inputGroup}>
-                <label style={styles.inputLabel}>Email</label>
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Email</label>
                 <input
-                  type="email"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
+                  type="email" name="username"
+                  value={formData.username} onChange={handleChange}
                   placeholder="example@mail.com"
-                  style={styles.input}
-                  required
+                  style={styles.input} required
                 />
               </div>
-              
-              <div style={styles.inputGroup}>
-                <label style={styles.inputLabel}>Пароль</label>
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Пароль</label>
                 <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
+                  type="password" name="password"
+                  value={formData.password} onChange={handleChange}
                   placeholder="Введите пароль"
-                  style={styles.input}
-                  required
+                  style={styles.input} required
                 />
               </div>
-              
-              <button 
-                type="submit" 
-                style={{
-                  ...styles.submitButton,
-                  ...(loading && styles.submitButtonDisabled)
-                }}
+              <button
+                type="submit"
+                className="login-btn"
+                style={{ ...styles.btn, ...(loading ? styles.btnDisabled : {}) }}
                 disabled={loading}
               >
-                {loading ? (
-                  <>
-                    <div style={styles.spinner}></div>
-                    Вход...
-                  </>
-                ) : (
-                  'Войти'
-                )}
+                {loading
+                  ? <><span style={styles.spinner} />Вход...</>
+                  : 'Войти в систему'}
               </button>
             </form>
-            
+
             <div style={styles.footer}>
-              <p style={styles.footerText}>
+              <p style={styles.footerLine}>
                 Нет аккаунта?{' '}
-                <Link to="/student/register" style={styles.footerLink}>
-                  Зарегистрироваться
-                </Link>
+                <Link to="/student/register" style={styles.link}>Зарегистрироваться</Link>
               </p>
-              <p style={styles.footerText}>
+              <p style={styles.footerLine}>
                 Вы преподаватель?{' '}
-                <Link to="/teacher/login" style={styles.footerLink}>
-                  Войти как преподаватель
-                </Link>
+                <Link to="/teacher/login" style={styles.link}>Войти как преподаватель</Link>
               </p>
             </div>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        input:focus {
-          border-color: #3b82f6 !important;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-        }
-        
-        button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
-        }
-        
-        a:hover {
-          color: #1d4ed8 !important;
-        }
-      `}</style>
     </div>
   );
 };
+
+const globalCSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  @keyframes blobMove1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%      { transform: translate(40px,-30px) scale(1.08); }
+  }
+  @keyframes blobMove2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%      { transform: translate(-30px,40px) scale(1.05); }
+  }
+  @keyframes blobMove3 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%      { transform: translate(20px,20px) scale(1.1); }
+  }
+  @keyframes spinBtn { to { transform: rotate(360deg); } }
+  .login-btn:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 30px rgba(37,99,235,0.45) !important;
+  }
+  .login-field:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important;
+    background: #fff !important;
+  }
+`;
 
 const styles = {
   page: {
     minHeight: '100vh',
     width: '100vw',
-    background: '#ffffff',
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    background: '#0a1628',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '0',
-    margin: '0',
-    overflow: 'hidden',
-    position: 'relative'
-  },
-  
-  gradientBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(99,102,241,0.05) 100%)',
-    zIndex: 0
-  },
-  
-  mainContainer: {
-    width: '95vw',
-    height: '95vh',
-    background: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: '20px',
-    boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)',
-    display: 'flex',
-    overflow: 'hidden',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255, 255, 255, 0.5)',
+    fontFamily: "'Inter', -apple-system, sans-serif",
     position: 'relative',
-    zIndex: 1
+    overflow: 'hidden',
+    padding: '1rem',
   },
-  
-  leftSection: {
+  /* Dithering shader — full-screen, GPU-accelerated */
+  shaderWrap: {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 0,
+    willChange: 'transform',
+    transform: 'translateZ(0)',
+    contain: 'layout style paint',
+  },
+  shader: {
+    width: '100%',
+    height: '100%',
+  },
+  /* Subtle dark overlay so the card reads better */
+  overlay: {
+    position: 'absolute',
+    inset: 0,
+    background: 'rgba(0,0,0,0.18)',
+    zIndex: 1,
+  },
+  card: {
+    position: 'relative',
+    zIndex: 1,
+    display: 'flex',
+    width: '100%',
+    maxWidth: '940px',
+    minHeight: '580px',
+    borderRadius: '24px',
+    overflow: 'hidden',
+    boxShadow: '0 32px 80px rgba(0,0,0,0.18)',
+  },
+  /* ---- LEFT PANEL ---- */
+  left: {
     flex: 1,
-    background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+    background: 'linear-gradient(160deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%)',
     color: 'white',
-    padding: '60px',
+    padding: '0',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
-    position: 'relative'
+    position: 'relative',
+    overflow: 'hidden',
   },
-  
-  logoSection: {
-    marginBottom: '60px'
+  /* Dot grid */
+  dotGrid: {
+    position: 'absolute',
+    inset: 0,
+    backgroundImage: 'radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px)',
+    backgroundSize: '28px 28px',
+    zIndex: 0,
   },
-  
-  logo: {
-    fontSize: '64px',
+  /* Decorative circles */
+  circleTopRight: {
+    position: 'absolute',
+    width: '260px', height: '260px',
+    borderRadius: '50%',
+    border: '1px solid rgba(255,255,255,0.08)',
+    top: '-80px', right: '-80px',
+    zIndex: 0,
+  },
+  circleBottomLeft: {
+    position: 'absolute',
+    width: '180px', height: '180px',
+    borderRadius: '50%',
+    border: '1px solid rgba(255,255,255,0.06)',
+    bottom: '-60px', left: '-60px',
+    zIndex: 0,
+  },
+  leftContent: {
+    position: 'relative',
+    zIndex: 1,
+    padding: '3rem 3rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2rem',
+  },
+  brand: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.375rem',
+  },
+  brandPill: {
+    display: 'inline-block',
+    padding: '0.25rem 0.875rem',
+    borderRadius: '20px',
+    background: 'rgba(255,255,255,0.12)',
+    border: '1px solid rgba(255,255,255,0.2)',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.8)',
+    width: 'fit-content',
+    marginBottom: '0.5rem',
+  },
+  brandName: {
+    fontSize: '2.25rem',
     fontWeight: '800',
-    marginBottom: '20px',
-    background: 'linear-gradient(135deg, #fff 0%, #e0e7ff 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
+    color: '#fff',
+    lineHeight: 1.1,
+    letterSpacing: '-0.02em',
   },
-  
-  tagline: {
-    fontSize: '24px',
-    opacity: 0.9,
-    lineHeight: 1.4,
-    fontWeight: '300'
+  brandTagline: {
+    fontSize: '0.9375rem',
+    color: 'rgba(255,255,255,0.55)',
+    fontWeight: '400',
+    lineHeight: 1.5,
   },
-  
+  /* About block */
+  aboutBlock: {
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '16px',
+    padding: '1.25rem 1.375rem',
+  },
+  aboutText: {
+    fontSize: '0.9375rem',
+    color: 'rgba(255,255,255,0.75)',
+    fontWeight: '400',
+    lineHeight: 1.7,
+    margin: 0,
+  },
+  divider: {
+    height: '1px',
+    background: 'rgba(255,255,255,0.1)',
+    margin: '0.875rem 0',
+  },
+  aboutHint: {
+    fontSize: '0.8125rem',
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '500',
+    margin: 0,
+    fontStyle: 'italic',
+  },
+  /* Feature rows */
   features: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '25px'
+    gap: '0.875rem',
   },
-  
   feature: {
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
-    fontSize: '18px',
-    fontWeight: '500'
+    gap: '0.875rem',
   },
-  
-  featureIcon: {
-    fontSize: '24px',
-    width: '50px',
-    height: '50px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: '12px',
-    backdropFilter: 'blur(10px)'
-  },
-  
-  featureText: {
-    fontSize: '18px'
-  },
-  
-  rightSection: {
-    flex: '0 0 500px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '40px',
-    background: 'rgba(255, 255, 255, 0.8)',
-    backdropFilter: 'blur(10px)'
-  },
-  
-  formContainer: {
-    width: '100%',
-    maxWidth: '380px'
-  },
-  
-  formHeader: {
-    textAlign: 'center',
-    marginBottom: '40px'
-  },
-  
-  formTitle: {
-    fontSize: '32px',
+  featureNum: {
+    fontSize: '0.7rem',
     fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: '12px'
+    color: 'rgba(255,255,255,0.35)',
+    letterSpacing: '0.05em',
+    flexShrink: 0,
+    width: '18px',
   },
-  
-  formSubtitle: {
-    fontSize: '16px',
-    color: '#6b7280',
-    fontWeight: '400'
+  featureLine: {
+    width: '28px',
+    height: '1.5px',
+    background: 'rgba(255,255,255,0.2)',
+    flexShrink: 0,
   },
-  
-  errorAlert: {
+  featureText: {
+    fontSize: '0.9375rem',
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.8)',
+  },
+  right: {
+    flex: '0 0 420px',
+    background: 'rgba(255,255,255,0.97)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '2.5rem',
+  },
+  formWrap: {
+    width: '100%',
+    maxWidth: '370px',
+  },
+  formTitle: {
+    fontSize: '1.625rem',
+    fontWeight: '800',
+    color: '#1e293b',
+    marginBottom: '0.375rem',
+  },
+  formSub: {
+    fontSize: '0.9375rem',
+    color: '#64748b',
+    marginBottom: '1.75rem',
+  },
+  errorBox: {
     background: '#fef2f2',
     border: '1px solid #fecaca',
     color: '#dc2626',
-    padding: '16px',
+    padding: '0.875rem 1rem',
     borderRadius: '12px',
-    marginBottom: '24px',
+    marginBottom: '1.25rem',
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    fontSize: '14px',
-    fontWeight: '500'
+    gap: '0.5rem',
+    fontSize: '0.875rem',
+    fontWeight: '500',
   },
-  
-  alertIcon: {
-    fontSize: '18px'
-  },
-  
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '24px'
+    gap: '1.125rem',
   },
-  
-  inputGroup: {
+  fieldGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px'
+    gap: '0.375rem',
   },
-  
-  inputLabel: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: '4px'
+  label: {
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    color: '#475569',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
   },
-  
   input: {
-    padding: '16px',
-    border: '2px solid #e5e7eb',
+    padding: '0.875rem 1rem',
+    border: '1.5px solid #e2e8f0',
     borderRadius: '12px',
-    fontSize: '16px',
-    transition: 'all 0.2s ease',
+    fontSize: '0.9375rem',
+    fontFamily: "'Inter', sans-serif",
+    color: '#1e293b',
+    background: '#f8fafc',
     outline: 'none',
-    fontWeight: '400',
-    background: '#ffffff',
+    transition: 'all 0.18s ease',
     width: '100%',
     boxSizing: 'border-box',
-    color: '#1f2937'
   },
-  
-  submitButton: {
-    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+  btn: {
+    marginTop: '0.5rem',
+    width: '100%',
+    padding: '1rem',
+    background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
     color: 'white',
     border: 'none',
-    padding: '18px',
     borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: '600',
+    fontSize: '1rem',
+    fontWeight: '700',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '10px',
-    marginTop: '8px',
-    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
-    width: '100%'
+    gap: '0.625rem',
+    boxShadow: '0 4px 16px rgba(37,99,235,0.35)',
+    transition: 'all 0.2s ease',
   },
-  
-  submitButtonDisabled: {
-    opacity: 0.6,
-    cursor: 'not-allowed'
+  btnDisabled: {
+    opacity: 0.65,
+    cursor: 'not-allowed',
   },
-  
   spinner: {
-    width: '20px',
-    height: '20px',
-    border: '2px solid transparent',
-    borderTop: '2px solid white',
+    width: '18px', height: '18px',
+    border: '2.5px solid rgba(255,255,255,0.4)',
+    borderTopColor: 'white',
     borderRadius: '50%',
-    animation: 'spin 1s linear infinite'
+    animation: 'spinBtn 0.75s linear infinite',
+    display: 'inline-block',
   },
-  
   footer: {
+    marginTop: '1.5rem',
+    paddingTop: '1.25rem',
+    borderTop: '1px solid #f1f5f9',
+  },
+  footerLine: {
+    fontSize: '0.875rem',
+    color: '#64748b',
+    marginTop: '0.5rem',
     textAlign: 'center',
-    marginTop: '32px',
-    paddingTop: '24px',
-    borderTop: '1px solid #f3f4f6'
   },
-  
-  footerText: {
-    color: '#6b7280',
-    fontSize: '14px',
-    fontWeight: '400',
-    marginTop: '8px'
-  },
-  
-  footerLink: {
-    color: '#3b82f6',
-    textDecoration: 'none',
+  link: {
+    color: '#2563eb',
     fontWeight: '600',
-    transition: 'color 0.2s ease'
-  }
+    textDecoration: 'none',
+  },
 };
 
 export default StudentLogin;

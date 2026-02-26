@@ -1,3 +1,4 @@
+// src/pages/student/Assignments.jsx
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
@@ -15,182 +16,121 @@ const StudentAssignments = () => {
 
   useEffect(() => {
     const user = getCurrentUser();
-    if (user) {
-      loadAssignments(user.id);
-    }
+    if (user) loadAssignments(user.id);
   }, []);
 
   const loadAssignments = async (userId) => {
     try {
       setLoading(true);
-      const [assignmentsData, submissionsData] = await Promise.all([
+      const [aData, sData] = await Promise.all([
         getAssignmentsByStudent(userId),
         getSubmissionsByStudent(userId)
       ]);
-      setAssignments(Array.isArray(assignmentsData) ? assignmentsData : []);
-      
-      const submissionsMap = {};
-      if (Array.isArray(submissionsData)) {
-        submissionsData.forEach(sub => {
-          submissionsMap[sub.assignment?.id] = sub;
-        });
-      }
-      setSubmissions(submissionsMap);
-    } catch (error) {
-      console.error('Failed to load assignments:', error);
-      setAssignments([]);
-      setSubmissions({});
-    } finally {
-      setLoading(false);
-    }
+      setAssignments(Array.isArray(aData) ? aData : []);
+      const map = {};
+      if (Array.isArray(sData)) sData.forEach(sub => { map[sub.assignment?.id] = sub; });
+      setSubmissions(map);
+    } catch (e) {
+      setAssignments([]); setSubmissions({});
+    } finally { setLoading(false); }
   };
 
   const handleOpenModal = (assignment) => {
     setSelectedAssignment(assignment);
-    setAnswerText('');
-    setFile(null);
-    setShowModal(true);
+    setAnswerText(''); setFile(null); setShowModal(true);
   };
 
   const handleSubmitAnswer = async (e) => {
     e.preventDefault();
     if (!selectedAssignment) return;
-    
-    if (!answerText.trim() && !file) {
-      alert('Пожалуйста, введите текст ответа или загрузите файл');
-      return;
-    }
-
+    if (!answerText.trim() && !file) { alert('Введите текст или загрузите файл'); return; }
     try {
+      await createSubmission(selectedAssignment.id, selectedAssignment.student.id, answerText.trim(), file);
+      setShowModal(false); setAnswerText(''); setFile(null); setSelectedAssignment(null);
       const user = getCurrentUser();
-      // Найдем student.id через user
-      await createSubmission(
-        selectedAssignment.id,
-        selectedAssignment.student.id,
-        answerText.trim(),
-        file
-      );
-      setShowModal(false);
-      setAnswerText('');
-      setFile(null);
-      setSelectedAssignment(null);
       if (user) loadAssignments(user.id);
       alert('Ответ успешно отправлен!');
-    } catch (error) {
-      console.error('Failed to submit answer:', error);
-      alert('Ошибка при отправке ответа: ' + (error.message || 'Неизвестная ошибка'));
-    }
+    } catch (e) { alert('Ошибка: ' + (e.message || 'Неизвестная ошибка')); }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleString('ru-RU', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const formatDate = (d) => {
+    if (!d) return '';
+    return new Date(d).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
   };
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar />
-        <div style={{ flex: 1 }}>
-          <Navbar />
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            <p>Загрузка...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const isOverdue = (deadline) => deadline && new Date(deadline) < new Date();
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar />
-      <div style={{ flex: 1 }}>
-        <Navbar />
-        <div style={{ padding: '20px' }}>
-          <h2>Мои задания</h2>
-          {assignments.length === 0 ? (
-            <p>Пока нет заданий</p>
+    <div style={s.page}>
+      <Navbar role="student" />
+      <div style={s.body}>
+        <Sidebar role="student" />
+        <main style={s.main}>
+          <div style={s.header}>
+            <div>
+              <h1 style={s.title}>📋 Мои задания</h1>
+              <p style={s.subtitle}>Выполненные и предстоящие задания</p>
+            </div>
+          </div>
+
+          {loading ? (
+            <div style={s.loading}>⏳ Загрузка заданий...</div>
+          ) : assignments.length === 0 ? (
+            <div style={s.empty}>📋 Пока нет заданий</div>
           ) : (
-            <div style={{ marginTop: '20px' }}>
+            <div style={{ display: 'grid', gap: '1rem' }}>
               {assignments.map((assignment) => {
                 const submission = submissions[assignment.id];
-                const hasSubmission = !!submission;
-                
+                const done = !!submission;
+                const overdue = !done && isOverdue(assignment.deadline);
+
                 return (
                   <div key={assignment.id} style={{
-                    border: '1px solid #ddd',
-                    borderRadius: '8px',
-                    padding: '16px',
-                    marginBottom: '16px',
-                    backgroundColor: '#f9f9f9'
+                    ...s.card,
+                    borderLeft: `4px solid ${done ? '#10b981' : overdue ? '#ef4444' : '#3b82f6'}`
                   }}>
-                    <h3 style={{ margin: '0 0 8px 0' }}>{assignment.title}</h3>
-                    <p style={{ margin: '4px 0', color: '#666' }}>
-                      <strong>Предмет:</strong> {assignment.subject?.name || 'Не указан'}
-                    </p>
-                    <p style={{ margin: '4px 0' }}>
-                      <strong>Описание:</strong> {assignment.description}
-                    </p>
-                    <p style={{ margin: '4px 0', color: '#666' }}>
-                      <strong>Дедлайн:</strong> {formatDate(assignment.deadline)}
-                    </p>
-                    <p style={{ margin: '4px 0', color: '#666', fontSize: '0.9em' }}>
-                      Создано: {formatDate(assignment.createdAt)}
-                    </p>
-                    
-                    {hasSubmission ? (
-                      <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#e8f5e9', borderRadius: '4px' }}>
-                        <p style={{ margin: 0, color: '#2e7d32', fontWeight: 'bold' }}>✓ Ответ отправлен</p>
+                    <div style={s.cardTop}>
+                      <div style={s.cardLeft}>
+                        <div style={s.cardTitle}>{assignment.title}</div>
+                        <div style={s.cardMeta}>
+                          {assignment.subject?.name && (
+                            <span style={s.tag}>📚 {assignment.subject.name}</span>
+                          )}
+                          {assignment.deadline && (
+                            <span style={{ ...s.tag, color: overdue ? '#fca5a5' : 'rgba(255,255,255,0.5)', background: overdue ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.06)' }}>
+                              ⏰ {formatDate(assignment.deadline)}{overdue ? ' (просрочено)' : ''}
+                            </span>
+                          )}
+                        </div>
+                        {assignment.description && (
+                          <p style={s.cardDesc}>{assignment.description}</p>
+                        )}
+                      </div>
+                      <div style={{ ...s.statusBadge, background: done ? 'rgba(16,185,129,0.15)' : overdue ? 'rgba(239,68,68,0.12)' : 'rgba(59,130,246,0.15)', color: done ? '#34d399' : overdue ? '#fca5a5' : '#93c5fd', border: `1px solid ${done ? 'rgba(16,185,129,0.3)' : overdue ? 'rgba(239,68,68,0.3)' : 'rgba(59,130,246,0.3)'}` }}>
+                        {done ? '✓ Сдано' : overdue ? '⚠ Просрочено' : '📝 Ожидает'}
+                      </div>
+                    </div>
+
+                    {done ? (
+                      <div style={s.submissionInfo}>
                         {submission.answerText && (
-                          <p style={{ margin: '8px 0 0 0', color: '#555' }}>
-                            <strong>Текст:</strong> {submission.answerText}
-                          </p>
+                          <div style={s.submText}>💬 {submission.answerText}</div>
                         )}
                         {submission.fileName && (
-                          <p style={{ margin: '8px 0 0 0' }}>
-                            <a href={`http://localhost:8080/api/assignment-submissions/${submission.id}/file`} 
-                               target="_blank" rel="noopener noreferrer" 
-                               style={{ color: '#1976d2', textDecoration: 'none' }}>
-                              📎 {submission.fileName}
-                            </a>
-                          </p>
+                          <a href={`http://localhost:8080/api/assignment-submissions/${submission.id}/file`}
+                            target="_blank" rel="noopener noreferrer" style={s.fileLink}>
+                            📎 {submission.fileName}
+                          </a>
                         )}
                         {submission.grade != null && (
-                          <div style={{ 
-                            marginTop: '12px', 
-                            padding: '8px 12px', 
-                            backgroundColor: '#fff3cd', 
-                            borderRadius: '4px',
-                            border: '1px solid #ffc107'
-                          }}>
-                            <p style={{ margin: 0, color: '#856404', fontWeight: 'bold' }}>
-                              ⭐ Оценка: {submission.grade}/100
-                            </p>
+                          <div style={s.gradeBox}>
+                            ⭐ Оценка: <strong style={{ color: '#fbbf24' }}>{submission.grade}/100</strong>
                           </div>
                         )}
                       </div>
                     ) : (
-                      <button 
-                        onClick={() => handleOpenModal(assignment)}
-                        style={{
-                          marginTop: '12px',
-                          padding: '10px 20px',
-                          backgroundColor: '#1976d2',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '14px'
-                        }}
-                      >
-                        Ответить на задание
+                      <button onClick={() => handleOpenModal(assignment)} style={s.btn}>
+                        Ответить на задание →
                       </button>
                     )}
                   </div>
@@ -198,114 +138,36 @@ const StudentAssignments = () => {
               })}
             </div>
           )}
-        </div>
+        </main>
       </div>
 
-      {/* Модальное окно для отправки ответа */}
+      {/* Modal */}
       {showModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            padding: '24px',
-            maxWidth: '600px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto'
-          }}>
-            <h3 style={{ margin: '0 0 16px 0' }}>Ответить на задание</h3>
-            <p style={{ margin: '0 0 16px 0', color: '#666' }}>
-              <strong>{selectedAssignment?.title}</strong>
-            </p>
-            
-            <form onSubmit={handleSubmitAnswer}>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-                  Текстовый ответ:
-                </label>
-                <textarea
-                  value={answerText}
-                  onChange={(e) => setAnswerText(e.target.value)}
+        <div style={s.overlay} onClick={e => e.target === e.currentTarget && setShowModal(false)}>
+          <div style={s.modal}>
+            <div style={s.modalHeader}>
+              <h3 style={s.modalTitle}>📝 Ответить на задание</h3>
+              <button onClick={() => setShowModal(false)} style={s.closeBtn}>✕</button>
+            </div>
+            <p style={s.modalSub}>{selectedAssignment?.title}</p>
+            <form onSubmit={handleSubmitAnswer} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={s.label}>Текстовый ответ</label>
+                <textarea value={answerText} onChange={e => setAnswerText(e.target.value)}
                   placeholder="Введите ваш ответ здесь..."
-                  rows="6"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    fontFamily: 'inherit',
-                    resize: 'vertical'
-                  }}
-                />
+                  rows={5} style={s.textarea} />
               </div>
-
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-                  Или загрузите файл:
-                </label>
-                <input
-                  type="file"
-                  accept=".doc,.docx,.pdf,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
-                  onChange={(e) => setFile(e.target.files[0])}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px'
-                  }}
-                />
-                <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#666' }}>
-                  Поддерживаемые форматы: Word, PDF, PowerPoint, текст, изображения
+              <div>
+                <label style={s.label}>Или загрузите файл</label>
+                <input type="file" accept=".doc,.docx,.pdf,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+                  onChange={e => setFile(e.target.files[0])} style={s.fileInput} />
+                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem', marginTop: '0.375rem' }}>
+                  Word, PDF, PowerPoint, текст, изображения
                 </p>
               </div>
-
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowModal(false);
-                    setSelectedAssignment(null);
-                    setAnswerText('');
-                    setFile(null);
-                  }}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#f5f5f5',
-                    color: '#333',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                >
-                  Отмена
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#1976d2',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                >
-                  Отправить ответ
-                </button>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => setShowModal(false)} style={s.cancelBtn}>Отмена</button>
+                <button type="submit" style={s.submitBtn}>Отправить ответ</button>
               </div>
             </form>
           </div>
@@ -315,6 +177,40 @@ const StudentAssignments = () => {
   );
 };
 
+const s = {
+  page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0a1628', fontFamily: "'Inter',-apple-system,sans-serif" },
+  body: { display: 'flex', flex: 1 },
+  main: { flex: 1, padding: '2rem', overflowY: 'auto', background: 'linear-gradient(160deg,#0a1628 0%,#0f1e3a 100%)' },
+  header: { background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '1.5rem 2rem', marginBottom: '1.5rem' },
+  title: { fontSize: '1.75rem', fontWeight: '800', color: '#60a5fa', margin: '0 0 0.25rem 0', letterSpacing: '-0.02em' },
+  subtitle: { color: 'rgba(255,255,255,0.45)', fontSize: '0.9rem', margin: 0 },
+  loading: { color: 'rgba(255,255,255,0.5)', textAlign: 'center', padding: '3rem' },
+  empty: { textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)', fontSize: '1.125rem', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)' },
+  card: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '1.5rem', transition: 'all 0.2s ease' },
+  cardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' },
+  cardLeft: { flex: 1 },
+  cardTitle: { fontSize: '1.0625rem', fontWeight: '700', color: '#fff', marginBottom: '0.5rem' },
+  cardMeta: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' },
+  tag: { fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.06)', padding: '0.25rem 0.625rem', borderRadius: '100px', fontWeight: '600' },
+  cardDesc: { fontSize: '0.875rem', color: 'rgba(255,255,255,0.45)', margin: 0, lineHeight: 1.6 },
+  statusBadge: { padding: '0.375rem 0.875rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: '700', flexShrink: 0 },
+  submissionInfo: { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '10px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' },
+  submText: { fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)', fontWeight: '500' },
+  fileLink: { fontSize: '0.875rem', color: '#60a5fa', textDecoration: 'none', fontWeight: '600' },
+  gradeBox: { fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)', fontWeight: '500' },
+  btn: { padding: '0.625rem 1.25rem', background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '0.875rem', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(59,130,246,0.35)' },
+  // Modal
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' },
+  modal: { background: '#0f1e3a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '2rem', width: '100%', maxWidth: '560px', maxHeight: '85vh', overflow: 'auto' },
+  modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' },
+  modalTitle: { fontSize: '1.125rem', fontWeight: '800', color: '#fff', margin: 0 },
+  modalSub: { color: 'rgba(255,255,255,0.45)', fontSize: '0.875rem', marginBottom: '1.5rem' },
+  closeBtn: { background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  label: { display: 'block', fontSize: '0.8125rem', fontWeight: '600', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' },
+  textarea: { width: '100%', padding: '0.875rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.9375rem', color: '#fff', fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box' },
+  fileInput: { width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem', outline: 'none', boxSizing: 'border-box' },
+  cancelBtn: { padding: '0.625rem 1.25rem', background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer' },
+  submitBtn: { padding: '0.625rem 1.25rem', background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '0.875rem', fontWeight: '700', cursor: 'pointer' },
+};
+
 export default StudentAssignments;
-
-

@@ -1,7 +1,9 @@
 // src/services/api.js
 // Реальные вызовы к Spring Boot бэкенду
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+// Backend URL logic:
+// If running inside Docker Compose frontend (Nginx), it serves from /. The proxy passes /api/ to backend:8080.
+// If running from Vite directly (localhost:5173), we want to hit localhost:8080.
+const BASE_URL = import.meta.env.VITE_API_URL || (window.location.port === '5173' ? 'http://localhost:8080' : '');
 import { getToken } from './auth';
 
 const fetchJSON = async (path, options = {}) => {
@@ -73,9 +75,9 @@ export const createAssignment = (payload) => fetchJSON('/api/assignments', { met
 export const deleteAssignment = (id) => fetchJSON(`/api/assignments/${id}`, { method: 'DELETE' });
 export const getSubmissionsByAssignment = (assignmentId) => fetchJSON(`/api/assignment-submissions/assignment/${assignmentId}`);
 export const getSubmissionsByStudent = (userId) => fetchJSON(`/api/assignment-submissions/student/${userId}`);
-export const setSubmissionGrade = (submissionId, grade) => fetchJSON(`/api/assignment-submissions/${submissionId}/grade`, { 
-  method: 'PATCH', 
-  body: JSON.stringify({ grade }) 
+export const setSubmissionGrade = (submissionId, grade) => fetchJSON(`/api/assignment-submissions/${submissionId}/grade`, {
+  method: 'PATCH',
+  body: JSON.stringify({ grade })
 });
 export const createSubmission = async (assignmentId, studentId, answerText, file) => {
   const formData = new FormData();
@@ -83,7 +85,7 @@ export const createSubmission = async (assignmentId, studentId, answerText, file
   formData.append('studentId', studentId);
   if (answerText) formData.append('answerText', answerText);
   if (file) formData.append('file', file);
-  
+
   const token = getToken();
   const res = await fetch(`${BASE_URL}/api/assignment-submissions`, {
     method: 'POST',
@@ -100,7 +102,7 @@ export const updateSubmission = async (id, answerText, file) => {
   const formData = new FormData();
   if (answerText !== undefined) formData.append('answerText', answerText);
   if (file) formData.append('file', file);
-  
+
   const token = getToken();
   const res = await fetch(`${BASE_URL}/api/assignment-submissions/${id}`, {
     method: 'PUT',

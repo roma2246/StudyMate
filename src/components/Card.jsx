@@ -1,67 +1,92 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const Card = ({ title, value, icon, color = 'blue' }) => {
-  const colorStyles = {
-    blue: { background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' },
-    green: { background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-    yellow: { background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
-    purple: { background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
-    red: { background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }
-  };
+const GRADIENTS = {
+  blue: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+  green: 'linear-gradient(135deg, #10b981, #059669)',
+  yellow: 'linear-gradient(135deg, #f59e0b, #d97706)',
+  purple: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+  red: 'linear-gradient(135deg, #ef4444, #dc2626)',
+};
+
+const ACCENT_COLORS = {
+  blue: '#3b82f6',
+  green: '#10b981',
+  yellow: '#f59e0b',
+  purple: '#8b5cf6',
+  red: '#ef4444',
+};
+
+const Card = ({ title, value, subtitle, icon, color = 'blue' }) => {
+  const [hovered, setHovered] = useState(false);
+  const accent = ACCENT_COLORS[color] || ACCENT_COLORS.blue;
 
   return (
-    <div style={styles.card}>
-      <div style={styles.cardContent}>
-        <div style={styles.cardInfo}>
-          <h3 style={styles.cardTitle}>{title}</h3>
-          <div style={styles.cardValue}>{value}</div>
+    <div
+      style={{
+        background: 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderRadius: '16px',
+        padding: '1.375rem 1.5rem',
+        border: `1px solid rgba(255,255,255,0.08)`,
+        borderTop: `2px solid ${accent}`,
+        transition: 'all 0.22s ease',
+        cursor: 'default',
+        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+        boxShadow: hovered
+          ? `0 16px 40px rgba(0,0,0,0.35), 0 0 0 1px ${accent}33`
+          : '0 4px 16px rgba(0,0,0,0.2)',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ flex: 1 }}>
+          <div style={{
+            fontSize: '0.7rem',
+            fontWeight: '700',
+            color: 'rgba(255,255,255,0.4)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            marginBottom: '0.5rem',
+          }}>
+            {title}
+          </div>
+          <div style={{
+            fontSize: '2.25rem',
+            fontWeight: '800',
+            color: '#fff',
+            lineHeight: 1.1,
+            marginBottom: '0.25rem',
+            letterSpacing: '-0.02em',
+          }}>
+            {value}
+          </div>
+          {subtitle && (
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', fontWeight: '500' }}>
+              {subtitle}
+            </div>
+          )}
         </div>
-        <div style={{...styles.cardIcon, ...colorStyles[color]}}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          borderRadius: '12px',
+          background: GRADIENTS[color] || GRADIENTS.blue,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '1.375rem',
+          color: 'white',
+          flexShrink: 0,
+          marginLeft: '1rem',
+          boxShadow: `0 8px 20px ${accent}50`,
+        }}>
           {icon}
         </div>
       </div>
     </div>
   );
-};
-
-const styles = {
-  card: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '1.5rem',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    border: '1px solid #e5e7eb'
-  },
-  cardContent: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  cardInfo: {
-    flex: 1
-  },
-  cardTitle: {
-    fontSize: '0.875rem',
-    fontWeight: '500',
-    color: '#6b7280',
-    margin: '0 0 0.5rem 0'
-  },
-  cardValue: {
-    fontSize: '2rem',
-    fontWeight: 'bold',
-    color: '#1f2937',
-    margin: 0
-  },
-  cardIcon: {
-    width: '60px',
-    height: '60px',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '1.5rem',
-    color: 'white'
-  }
 };
 
 export default Card;

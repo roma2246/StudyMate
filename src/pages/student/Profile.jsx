@@ -6,261 +6,93 @@ import Sidebar from '../../components/Sidebar';
 import { getUserName, isAuthenticated } from '../../services/auth';
 
 const StudentProfile = () => {
-  const [profile, setProfile] = useState({
-    name: '',
-    email: '',
-    group: '',
-    course: '',
-    specialty: ''
-  });
-  
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmNewPassword: ''
-  });
-  
-  const [settings, setSettings] = useState({
-    theme: 'light',
-    language: 'ru'
-  });
-
+  const [profile, setProfile] = useState({ name: '', email: '', group: '', course: '', specialty: '' });
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+  const [settings, setSettings] = useState({ language: 'ru' });
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      navigate('/login');
-      return;
-    }
-    
-    // Загружаем данные профиля
+    if (!isAuthenticated()) { navigate('/login'); return; }
     const userName = getUserName();
-    setProfile({
-      name: userName || 'Студент',
-      email: 'student@example.com',
-      group: 'Группа 1',
-      course: '3 курс',
-      specialty: 'Информатика'
-    });
+    setProfile({ name: userName || 'Студент', email: 'student@example.com', group: 'Группа 1', course: '3 курс', specialty: 'Информатика' });
   }, [navigate]);
 
-  const handleProfileChange = (e) => {
-    const { name, value } = e.target;
-    setProfile(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-    setPasswordData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSettingsChange = (e) => {
-    const { name, value } = e.target;
-    setSettings(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleProfileSubmit = (e) => {
-    e.preventDefault();
-    alert('Профиль успешно обновлен!');
-  };
-
+  const handleProfileSubmit = (e) => { e.preventDefault(); alert('Профиль успешно обновлен!'); };
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
-    
-    if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-      alert('Новые пароли не совпадают!');
-      return;
-    }
-    
-    if (!passwordData.currentPassword || !passwordData.newPassword) {
-      alert('Заполните все поля!');
-      return;
-    }
-    
+    if (passwordData.newPassword !== passwordData.confirmNewPassword) { alert('Пароли не совпадают!'); return; }
     alert('Пароль успешно изменен!');
-    
-    // Reset password form
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmNewPassword: ''
-    });
+    setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
   };
 
-  const handleSettingsSubmit = (e) => {
-    e.preventDefault();
-    alert('Настройки успешно сохранены!');
-  };
+  const initials = profile.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  const field = (label, name, value, type = 'text', onChange) => (
+    <div style={s.formGroup}>
+      <label style={s.label}>{label}</label>
+      <input type={type} name={name} value={value} onChange={onChange}
+        style={s.input}
+        onFocus={e => { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.15)'; }}
+        onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+      />
+    </div>
+  );
 
   return (
-    <div style={styles.app}>
+    <div style={s.page}>
       <Navbar role="student" />
-      <div style={styles.appBody}>
+      <div style={s.body}>
         <Sidebar role="student" />
-        <main style={styles.mainContent}>
-          <div style={styles.pageHeader}>
-            <h1 style={styles.pageTitle}>Профиль</h1>
+        <main style={s.main}>
+          {/* Header */}
+          <div style={s.header}>
+            <div style={s.avatarWrap}>
+              <div style={s.avatar}>{initials}</div>
+              <div>
+                <h1 style={s.title}>{profile.name}</h1>
+                <p style={s.subtitle}>🎓 Студент · {profile.specialty}</p>
+              </div>
+            </div>
           </div>
-          
-          <div style={styles.profileContainer}>
-            <div style={styles.profileSection}>
-              <h2 style={styles.sectionTitle}>Личные данные</h2>
-              <form onSubmit={handleProfileSubmit} style={styles.profileForm}>
-                <div style={styles.formGroup}>
-                  <label htmlFor="name" style={styles.label}>Имя</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={profile.name}
-                    onChange={handleProfileChange}
-                    style={styles.input}
-                  />
-                </div>
-                
-                <div style={styles.formGroup}>
-                  <label htmlFor="email" style={styles.label}>Email</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={profile.email}
-                    onChange={handleProfileChange}
-                    style={styles.input}
-                  />
-                </div>
-                
-                <div style={styles.formGroup}>
-                  <label htmlFor="group" style={styles.label}>Группа</label>
-                  <input
-                    type="text"
-                    id="group"
-                    name="group"
-                    value={profile.group}
-                    onChange={handleProfileChange}
-                    style={styles.input}
-                  />
-                </div>
-                
-                <div style={styles.formGroup}>
-                  <label htmlFor="course" style={styles.label}>Курс</label>
-                  <input
-                    type="text"
-                    id="course"
-                    name="course"
-                    value={profile.course}
-                    onChange={handleProfileChange}
-                    style={styles.input}
-                  />
-                </div>
-                
-                <div style={styles.formGroup}>
-                  <label htmlFor="specialty" style={styles.label}>Специальность</label>
-                  <input
-                    type="text"
-                    id="specialty"
-                    name="specialty"
-                    value={profile.specialty}
-                    onChange={handleProfileChange}
-                    style={styles.input}
-                  />
-                </div>
-                
-                <button type="submit" style={styles.btnPrimary}>
-                  Сохранить изменения
-                </button>
+
+          <div style={s.grid}>
+            {/* Personal info */}
+            <div style={s.card}>
+              <h2 style={s.cardTitle}>👤 Личные данные</h2>
+              <form onSubmit={handleProfileSubmit} style={s.form}>
+                {field('Полное имя', 'name', profile.name, 'text', e => setProfile(p => ({ ...p, [e.target.name]: e.target.value })))}
+                {field('Email', 'email', profile.email, 'email', e => setProfile(p => ({ ...p, [e.target.name]: e.target.value })))}
+                {field('Группа', 'group', profile.group, 'text', e => setProfile(p => ({ ...p, [e.target.name]: e.target.value })))}
+                {field('Курс', 'course', profile.course, 'text', e => setProfile(p => ({ ...p, [e.target.name]: e.target.value })))}
+                {field('Специальность', 'specialty', profile.specialty, 'text', e => setProfile(p => ({ ...p, [e.target.name]: e.target.value })))}
+                <button type="submit" style={s.btn}>Сохранить изменения</button>
               </form>
             </div>
-            
-            <div style={styles.profileSection}>
-              <h2 style={styles.sectionTitle}>Изменение пароля</h2>
-              <form onSubmit={handlePasswordSubmit} style={styles.profileForm}>
-                <div style={styles.formGroup}>
-                  <label htmlFor="currentPassword" style={styles.label}>Текущий пароль</label>
-                  <input
-                    type="password"
-                    id="currentPassword"
-                    name="currentPassword"
-                    value={passwordData.currentPassword}
-                    onChange={handlePasswordChange}
-                    style={styles.input}
-                  />
-                </div>
-                
-                <div style={styles.formGroup}>
-                  <label htmlFor="newPassword" style={styles.label}>Новый пароль</label>
-                  <input
-                    type="password"
-                    id="newPassword"
-                    name="newPassword"
-                    value={passwordData.newPassword}
-                    onChange={handlePasswordChange}
-                    style={styles.input}
-                  />
-                </div>
-                
-                <div style={styles.formGroup}>
-                  <label htmlFor="confirmNewPassword" style={styles.label}>Подтвердите новый пароль</label>
-                  <input
-                    type="password"
-                    id="confirmNewPassword"
-                    name="confirmNewPassword"
-                    value={passwordData.confirmNewPassword}
-                    onChange={handlePasswordChange}
-                    style={styles.input}
-                  />
-                </div>
-                
-                <button type="submit" style={styles.btnPrimary}>
-                  Изменить пароль
-                </button>
+
+            {/* Password */}
+            <div style={s.card}>
+              <h2 style={s.cardTitle}>🔐 Изменение пароля</h2>
+              <form onSubmit={handlePasswordSubmit} style={s.form}>
+                {field('Текущий пароль', 'currentPassword', passwordData.currentPassword, 'password', e => setPasswordData(p => ({ ...p, [e.target.name]: e.target.value })))}
+                {field('Новый пароль', 'newPassword', passwordData.newPassword, 'password', e => setPasswordData(p => ({ ...p, [e.target.name]: e.target.value })))}
+                {field('Подтвердите пароль', 'confirmNewPassword', passwordData.confirmNewPassword, 'password', e => setPasswordData(p => ({ ...p, [e.target.name]: e.target.value })))}
+                <button type="submit" style={s.btn}>Изменить пароль</button>
               </form>
             </div>
-            
-            <div style={styles.profileSection}>
-              <h2 style={styles.sectionTitle}>Настройки интерфейса</h2>
-              <form onSubmit={handleSettingsSubmit} style={styles.profileForm}>
-                <div style={styles.formGroup}>
-                  <label htmlFor="theme" style={styles.label}>Тема</label>
-                  <select
-                    id="theme"
-                    name="theme"
-                    value={settings.theme}
-                    onChange={handleSettingsChange}
-                    style={styles.select}
-                  >
-                    <option value="light">Светлая</option>
-                    <option value="dark">Темная</option>
+
+            {/* Settings */}
+            <div style={s.card}>
+              <h2 style={s.cardTitle}>⚙️ Настройки интерфейса</h2>
+              <form onSubmit={e => { e.preventDefault(); alert('Настройки сохранены!'); }} style={s.form}>
+                <div style={s.formGroup}>
+                  <label style={s.label}>Язык интерфейса</label>
+                  <select value={settings.language} onChange={e => setSettings(p => ({ ...p, language: e.target.value }))} style={s.select}>
+                    <option value="ru">🇷🇺 Русский</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="kk">🇰🇿 Қазақша</option>
                   </select>
                 </div>
-                
-                <div style={styles.formGroup}>
-                  <label htmlFor="language" style={styles.label}>Язык</label>
-                  <select
-                    id="language"
-                    name="language"
-                    value={settings.language}
-                    onChange={handleSettingsChange}
-                    style={styles.select}
-                  >
-                    <option value="ru">Русский</option>
-                    <option value="en">English</option>
-                    <option value="kk">Қазақша</option>
-                  </select>
-                </div>
-                
-                <button type="submit" style={styles.btnPrimary}>
-                  Сохранить настройки
-                </button>
+                <button type="submit" style={s.btn}>Сохранить настройки</button>
               </form>
             </div>
           </div>
@@ -270,89 +102,24 @@ const StudentProfile = () => {
   );
 };
 
-const styles = {
-  app: {
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column'
-  },
-  appBody: {
-    display: 'flex',
-    flex: 1
-  },
-  mainContent: {
-    flex: 1,
-    padding: '2rem',
-    overflowY: 'auto'
-  },
-  pageHeader: {
-    marginBottom: '2rem'
-  },
-  pageTitle: {
-    fontSize: '2rem',
-    fontWeight: '700',
-    color: '#1f2937',
-    margin: 0
-  },
-  profileContainer: {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '2rem',
-    maxWidth: '800px'
-  },
-  profileSection: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '2rem',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    border: '1px solid #e5e7eb'
-  },
-  sectionTitle: {
-    fontSize: '1.5rem',
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: '1.5rem'
-  },
-  profileForm: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem'
-  },
-  formGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem'
-  },
-  label: {
-    fontSize: '0.875rem',
-    fontWeight: '500',
-    color: '#374151'
-  },
-  input: {
-    padding: '0.75rem',
-    border: '1px solid #d1d5db',
-    borderRadius: '0.5rem',
-    fontSize: '0.875rem',
-    transition: 'all 0.2s ease'
-  },
-  select: {
-    padding: '0.75rem',
-    border: '1px solid #d1d5db',
-    borderRadius: '0.5rem',
-    fontSize: '0.875rem',
-    backgroundColor: 'white'
-  },
-  btnPrimary: {
-    padding: '0.75rem 1.5rem',
-    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '0.5rem',
-    fontSize: '0.875rem',
-    fontWeight: '500',
-    cursor: 'pointer',
-    alignSelf: 'flex-start'
-  }
+const s = {
+  page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0a1628', fontFamily: "'Inter',-apple-system,sans-serif" },
+  body: { display: 'flex', flex: 1 },
+  main: { flex: 1, padding: '2rem', overflowY: 'auto', background: 'linear-gradient(160deg,#0a1628 0%,#0f1e3a 100%)' },
+  header: { background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '1.75rem 2rem', marginBottom: '1.5rem' },
+  avatarWrap: { display: 'flex', alignItems: 'center', gap: '1.25rem' },
+  avatar: { width: '64px', height: '64px', borderRadius: '16px', background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', color: '#fff', fontWeight: '800', fontSize: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(59,130,246,0.4)', flexShrink: 0 },
+  title: { fontSize: '1.75rem', fontWeight: '800', color: '#fff', margin: '0 0 0.25rem 0', letterSpacing: '-0.02em' },
+  subtitle: { color: 'rgba(255,255,255,0.45)', fontSize: '0.9rem', margin: 0, fontWeight: '500' },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.25rem' },
+  card: { background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '1.75rem' },
+  cardTitle: { fontSize: '1rem', fontWeight: '700', color: '#fff', marginBottom: '1.25rem', paddingBottom: '0.875rem', borderBottom: '1px solid rgba(255,255,255,0.07)' },
+  form: { display: 'flex', flexDirection: 'column', gap: '1rem' },
+  formGroup: { display: 'flex', flexDirection: 'column', gap: '0.375rem' },
+  label: { fontSize: '0.8125rem', fontWeight: '600', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em' },
+  input: { padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.9375rem', color: '#fff', outline: 'none', fontFamily: 'inherit', transition: 'all 0.2s ease' },
+  select: { padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.9375rem', color: '#fff', outline: 'none', fontFamily: 'inherit' },
+  btn: { padding: '0.75rem 1.5rem', background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '0.9375rem', fontWeight: '700', cursor: 'pointer', alignSelf: 'flex-start', boxShadow: '0 4px 12px rgba(59,130,246,0.4)' },
 };
 
 export default StudentProfile;

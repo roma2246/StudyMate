@@ -36,70 +36,55 @@ const StudentDashboard = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       const currentUser = getCurrentUser();
       if (!currentUser || !currentUser.id) {
         console.error('User not authenticated');
         return;
       }
 
-      // Получаем студента по userId
       const student = await getStudentByUserId(currentUser.id);
       if (!student || !student.id) {
         console.error('Student not found for userId:', currentUser.id);
         return;
       }
 
-      console.log('Found student:', student.id);
-
-      // Получаем оценки студента
       let grades = [];
       try {
         grades = await getGradesByStudent(student.id);
-        console.log('Loaded grades:', grades?.length || 0, grades);
       } catch (error) {
         console.error('Failed to load grades:', error);
         grades = [];
       }
-      
-      // Если grades не массив, пытаемся преобразовать
+
       if (!Array.isArray(grades)) {
-        console.warn('Grades is not an array:', grades);
         grades = [];
       }
-      
-      // Получаем средний GPA
+
       let averageGPA = 0;
       try {
         const gpaResponse = await getStudentGPA(student.id);
-        // API возвращает объект {gpa: number, totalGrades: number}
         averageGPA = gpaResponse?.gpa || 0;
       } catch (error) {
-        console.warn('Could not get GPA:', error);
-        // Рассчитываем GPA из оценок (конвертируем из 100-балльной в 5-балльную)
         if (grades && grades.length > 0) {
           const sum = grades.reduce((acc, g) => {
             const val = g.value || 0;
-            // Конвертируем в 5-балльную систему
-            const val5 = val / 20;
-            return acc + val5;
+            return acc + val / 20;
           }, 0);
           averageGPA = sum / grades.length;
         }
       }
 
-      // Получаем предметы для названий
       const subjects = await getSubjects();
       const subjectsMap = new Map(subjects.map(s => [s.id, s.name]));
 
-      // Рассчитываем GPA по предметам
       const gpaBySubject = {};
       const subjectCounts = {};
-      
+
       grades.forEach(grade => {
         const subjectId = grade.subject?.id || grade.subjectId;
         const subjectName = subjectsMap.get(subjectId) || 'Неизвестный предмет';
-        
+
         if (!gpaBySubject[subjectName]) {
           gpaBySubject[subjectName] = 0;
           subjectCounts[subjectName] = 0;
@@ -110,8 +95,7 @@ const StudentDashboard = () => {
 
       const gpaDataArray = Object.keys(gpaBySubject).map((subjectName, index) => {
         const avg = gpaBySubject[subjectName] / subjectCounts[subjectName];
-        // Конвертируем 100-балльную систему в 5-балльную для отображения
-        const avg5 = (avg / 20); // 100/5 = 20
+        const avg5 = avg / 20;
         const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
         return {
           label: subjectName,
@@ -119,26 +103,20 @@ const StudentDashboard = () => {
           color: colors[index % colors.length]
         };
       }).sort((a, b) => b.value - a.value);
-      
+
       setGpaData(gpaDataArray);
 
-      // Распределение оценок
-      // Оценки могут быть от 0 до 100, нужно конвертировать в 5-балльную систему
-      const distribution = {
-        5: 0, 4: 0, 3: 0, 2: 0, 1: 0
-      };
-      
+      const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+
       grades.forEach(grade => {
         const value = grade.value;
         if (value != null) {
-          // Конвертируем 100-балльную систему в 5-балльную
           let grade5 = 1;
           if (value >= 90) grade5 = 5;
           else if (value >= 75) grade5 = 4;
           else if (value >= 60) grade5 = 3;
           else if (value >= 40) grade5 = 2;
           else grade5 = 1;
-          
           distribution[grade5]++;
         }
       });
@@ -150,11 +128,9 @@ const StudentDashboard = () => {
         { label: 'Неудовлетворительно (2)', value: distribution[2], color: '#ef4444' },
         { label: 'Плохо (1)', value: distribution[1], color: '#991b1b' }
       ].filter(item => item.value > 0);
-      
+
       setGradeDistribution(gradeDistributionArray);
 
-      // Последние оценки (последние 5)
-      // Сортируем по ID (последние = больший ID)
       const recentGradesArray = grades
         .sort((a, b) => (b.id || 0) - (a.id || 0))
         .slice(0, 5)
@@ -162,20 +138,18 @@ const StudentDashboard = () => {
           id: grade.id,
           subject: subjectsMap.get(grade.subject?.id || grade.subjectId) || 'Неизвестный предмет',
           grade: grade.value,
-          date: new Date().toLocaleDateString('ru-RU'), // Используем текущую дату, т.к. createdAt нет в модели
+          date: new Date().toLocaleDateString('ru-RU'),
           type: 'Оценка',
-          teacher: 'Преподаватель' // Teacher нет в модели Grade
+          teacher: 'Преподаватель'
         }));
-      
+
       setRecentGrades(recentGradesArray);
 
-      // Получаем задания студента
       const assignments = await getAssignmentsByStudent(currentUser.id);
-      
-      // Фильтруем задания по дедлайну (ближайшие 7 дней)
+
       const now = new Date();
       const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-      
+
       const upcomingAssignments = assignments
         .filter(a => {
           const deadline = new Date(a.deadline);
@@ -186,11 +160,11 @@ const StudentDashboard = () => {
         .map(a => {
           const deadline = new Date(a.deadline);
           const daysUntil = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-          
+
           let priority = 'low';
           if (daysUntil <= 1) priority = 'high';
           else if (daysUntil <= 3) priority = 'medium';
-          
+
           return {
             id: a.id,
             type: 'Задание',
@@ -200,13 +174,10 @@ const StudentDashboard = () => {
             description: a.description || a.title
           };
         });
-      
+
       setUpcoming(upcomingAssignments);
 
-      // Подсчитываем статистику
       const completedSubmissions = assignments.filter(a => {
-        // Проверяем, есть ли submission для этого задания
-        // Пока используем простую логику: если deadline прошел, считаем выполненным
         return new Date(a.deadline) < now;
       }).length;
 
@@ -215,13 +186,6 @@ const StudentDashboard = () => {
         completedAssignments: completedSubmissions,
         totalAssignments: assignments.length || 0,
         upcomingAssignments: upcomingAssignments.length || 0
-      });
-
-      console.log('Dashboard stats:', {
-        averageGPA,
-        gradesCount: grades.length,
-        assignmentsCount: assignments.length,
-        upcomingCount: upcomingAssignments.length
       });
 
     } catch (error) {
@@ -237,9 +201,9 @@ const StudentDashboard = () => {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'high': return '#ef4444';
-      case 'medium': return '#f59e0b';
-      case 'low': return '#10b981';
+      case 'high': return '#f87171';
+      case 'medium': return '#fbbf24';
+      case 'low': return '#34d399';
       default: return '#6b7280';
     }
   };
@@ -273,19 +237,19 @@ const StudentDashboard = () => {
               </p>
             </div>
             <div style={styles.pageActions}>
-              <button 
-                style={styles.btnOutline} 
+              <button
+                style={styles.btnOutline}
                 onClick={handleRefresh}
                 disabled={loading}
               >
-                {loading ? '🔄' : '🔄'} Обновить
+                🔄 Обновить
               </button>
               <button style={styles.btnPrimary}>
                 📋 Мои цели
               </button>
             </div>
           </div>
-          
+
           {loading ? (
             <div style={styles.loadingContainer}>
               <div style={styles.spinner}></div>
@@ -295,57 +259,57 @@ const StudentDashboard = () => {
             <>
               {/* Статистика */}
               <div style={styles.dashboardStats}>
-                <Card 
-                  title="Средний балл" 
-                  value={stats.averageGPA || 0} 
+                <Card
+                  title="Средний балл"
+                  value={stats.averageGPA || 0}
                   subtitle="из 5.0"
-                  icon="📊" 
-                  color="purple" 
+                  icon="📊"
+                  color="purple"
                 />
-                <Card 
-                  title="Завершено заданий" 
-                  value={stats.completedAssignments || 0} 
+                <Card
+                  title="Завершено заданий"
+                  value={stats.completedAssignments || 0}
                   subtitle={`из ${stats.totalAssignments || 0}`}
-                  icon="✅" 
-                  color="green" 
+                  icon="✅"
+                  color="green"
                 />
-                <Card 
-                  title="Ожидает сдачи" 
-                  value={stats.upcomingAssignments || 0} 
+                <Card
+                  title="Ожидает сдачи"
+                  value={stats.upcomingAssignments || 0}
                   subtitle="ближайшие 7 дней"
-                  icon="⏳" 
-                  color="yellow" 
+                  icon="⏳"
+                  color="yellow"
                 />
-                <Card 
-                  title="Всего заданий" 
-                  value={stats.totalAssignments || 0} 
+                <Card
+                  title="Всего заданий"
+                  value={stats.totalAssignments || 0}
                   subtitle="в системе"
-                  icon="📅" 
-                  color="blue" 
+                  icon="📅"
+                  color="blue"
                 />
               </div>
-              
+
               {/* Графики */}
               <div style={styles.dashboardCharts}>
                 <div style={styles.chartContainer}>
-                  <Chart 
-                    type="bar" 
-                    title="Средний балл по предметам" 
+                  <Chart
+                    type="bar"
+                    title="Средний балл по предметам"
                     data={gpaData}
                     height={300}
                   />
                 </div>
                 <div style={styles.chartContainer}>
-                  <Chart 
-                    type="pie" 
-                    title="Распределение оценок" 
+                  <Chart
+                    type="pie"
+                    title="Распределение оценок"
                     data={gradeDistribution}
                     height={300}
                   />
                 </div>
               </div>
-              
-              {/* Последние оценки и предстоящие события */}
+
+              {/* Последние оценки и события */}
               <div style={styles.dashboardGrid}>
                 <div style={styles.gridColumn}>
                   <div style={styles.sectionCard}>
@@ -354,7 +318,7 @@ const StudentDashboard = () => {
                       <span style={styles.viewAll}>Все оценки →</span>
                     </div>
                     <div style={styles.tableContainer}>
-                      <Table 
+                      <Table
                         columns={[
                           { key: 'subject', header: 'Предмет', width: '25%' },
                           { key: 'type', header: 'Тип работы', width: '30%' },
@@ -369,7 +333,7 @@ const StudentDashboard = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div style={styles.gridColumn}>
                   <div style={styles.sectionCard}>
                     <div style={styles.sectionHeader}>
@@ -389,6 +353,7 @@ const StudentDashboard = () => {
                                 {item.type === 'Домашнее задание' && '📚'}
                                 {item.type === 'Контрольная' && '📝'}
                                 {item.type === 'Проект' && '💼'}
+                                {item.type === 'Задание' && '📋'}
                               </div>
                               <div style={styles.upcomingContent}>
                                 <div style={styles.upcomingTitle}>
@@ -402,7 +367,7 @@ const StudentDashboard = () => {
                                   <span style={styles.dueDate}>
                                     📅 до {formatDate(item.dueDate)}
                                   </span>
-                                  <span 
+                                  <span
                                     style={{
                                       ...styles.priority,
                                       color: getPriorityColor(item.priority)
@@ -425,13 +390,13 @@ const StudentDashboard = () => {
               <div style={styles.quickActions}>
                 <h2 style={styles.sectionTitle}>⚡ Быстрые действия</h2>
                 <div style={styles.actionButtons}>
-                  <button 
+                  <button
                     style={styles.actionBtn}
                     onClick={() => navigate('/student/grades')}
                   >
                     📖 Посмотреть все оценки
                   </button>
-                  <button 
+                  <button
                     style={styles.actionBtn}
                     onClick={() => navigate('/student/profile')}
                   >
@@ -458,193 +423,199 @@ const styles = {
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: '#f8fafc'
+    backgroundColor: '#0a1628',
+    fontFamily: "'Inter', -apple-system, sans-serif",
   },
   appBody: {
     display: 'flex',
-    flex: 1
+    flex: 1,
   },
   mainContent: {
     flex: 1,
     padding: '2rem',
     overflowY: 'auto',
-    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
+    background: 'linear-gradient(160deg, #0a1628 0%, #0f1e3a 100%)',
   },
   pageHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: '2rem',
-    background: 'white',
-    padding: '2rem',
+    background: 'rgba(255,255,255,0.04)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    padding: '1.5rem 2rem',
     borderRadius: '16px',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    border: '1px solid #e2e8f0'
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
   },
   pageTitle: {
-    fontSize: '2.25rem',
+    fontSize: '2rem',
     fontWeight: '800',
-    color: '#1e293b',
-    margin: '0 0 0.5rem 0',
-    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
+    margin: '0 0 0.375rem 0',
+    color: '#60a5fa',
+    letterSpacing: '-0.02em',
   },
   pageSubtitle: {
     margin: 0,
-    color: '#64748b',
-    fontSize: '1.125rem',
-    fontWeight: '400'
+    color: 'rgba(255,255,255,0.45)',
+    fontSize: '0.9375rem',
+    fontWeight: '400',
   },
   pageActions: {
     display: 'flex',
-    gap: '1rem',
-    alignItems: 'center'
+    gap: '0.75rem',
+    alignItems: 'center',
   },
   btnPrimary: {
-    padding: '0.75rem 1.5rem',
-    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+    padding: '0.625rem 1.25rem',
+    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
     color: 'white',
     border: 'none',
-    borderRadius: '12px',
+    borderRadius: '10px',
     fontSize: '0.875rem',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
-    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+    boxShadow: '0 4px 12px rgba(59,130,246,0.35)',
   },
   btnOutline: {
-    padding: '0.75rem 1.5rem',
-    background: 'white',
-    color: '#475569',
-    border: '2px solid #e2e8f0',
-    borderRadius: '12px',
+    padding: '0.625rem 1.25rem',
+    background: 'rgba(255,255,255,0.06)',
+    color: 'rgba(255,255,255,0.7)',
+    border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: '10px',
     fontSize: '0.875rem',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem'
+    gap: '0.5rem',
   },
   dashboardStats: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '1.5rem',
-    marginBottom: '2rem'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '1.25rem',
+    marginBottom: '1.75rem',
   },
   dashboardCharts: {
     display: 'grid',
     gridTemplateColumns: '2fr 1fr',
-    gap: '1.5rem',
-    marginBottom: '2rem'
+    gap: '1.25rem',
+    marginBottom: '1.75rem',
   },
   chartContainer: {
-    background: 'white',
+    background: 'rgba(255,255,255,0.04)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
     borderRadius: '16px',
     padding: '1.5rem',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    border: '1px solid #e2e8f0'
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
   },
   dashboardGrid: {
     display: 'grid',
     gridTemplateColumns: '2fr 1fr',
-    gap: '1.5rem',
-    marginBottom: '2rem'
+    gap: '1.25rem',
+    marginBottom: '1.75rem',
   },
   gridColumn: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem'
+    gap: '1.25rem',
   },
   sectionCard: {
-    background: 'white',
+    background: 'rgba(255,255,255,0.04)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
     borderRadius: '16px',
     padding: '1.5rem',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    border: '1px solid #e2e8f0',
-    height: 'fit-content'
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+    height: 'fit-content',
   },
   sectionHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '1.5rem',
+    marginBottom: '1.25rem',
     paddingBottom: '1rem',
-    borderBottom: '2px solid #f1f5f9'
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
   },
   sectionTitle: {
-    fontSize: '1.25rem',
+    fontSize: '1.0625rem',
     fontWeight: '700',
-    color: '#1e293b',
+    color: 'rgba(255,255,255,0.9)',
     margin: 0,
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem'
+    gap: '0.5rem',
   },
   viewAll: {
-    color: '#3b82f6',
-    fontSize: '0.875rem',
+    color: '#60a5fa',
+    fontSize: '0.8125rem',
     fontWeight: '600',
     cursor: 'pointer',
-    textDecoration: 'none'
   },
   tableContainer: {
-    overflowX: 'auto'
+    overflowX: 'auto',
   },
   upcomingList: {
-    minHeight: '200px'
+    minHeight: '180px',
   },
   noEvents: {
-    color: '#94a3b8',
+    color: 'rgba(255,255,255,0.35)',
     textAlign: 'center',
     padding: '3rem 1rem',
-    fontSize: '1.125rem',
-    fontWeight: '500'
+    fontSize: '1rem',
+    fontWeight: '500',
   },
   upcomingItems: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem'
+    gap: '0.875rem',
   },
   upcomingItem: {
     display: 'flex',
     gap: '1rem',
     padding: '1rem',
-    background: '#f8fafc',
+    background: 'rgba(255,255,255,0.04)',
     borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    transition: 'all 0.2s ease'
+    border: '1px solid rgba(255,255,255,0.07)',
+    transition: 'all 0.2s ease',
   },
   upcomingIcon: {
     fontSize: '1.5rem',
-    flexShrink: 0
+    flexShrink: 0,
   },
   upcomingContent: {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem'
+    gap: '0.375rem',
   },
   upcomingTitle: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: '0.5rem'
+    gap: '0.5rem',
+    color: 'rgba(255,255,255,0.85)',
+    fontWeight: '600',
+    fontSize: '0.9375rem',
   },
   upcomingType: {
-    background: '#e0e7ff',
-    color: '#3730a3',
-    padding: '0.25rem 0.75rem',
+    background: 'rgba(99,102,241,0.2)',
+    color: '#a5b4fc',
+    padding: '0.2rem 0.625rem',
     borderRadius: '20px',
     fontSize: '0.75rem',
-    fontWeight: '600'
+    fontWeight: '600',
   },
   upcomingDescription: {
-    color: '#64748b',
-    fontSize: '0.875rem'
+    color: 'rgba(255,255,255,0.45)',
+    fontSize: '0.875rem',
   },
   upcomingMeta: {
     display: 'flex',
@@ -652,34 +623,36 @@ const styles = {
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: '0.5rem',
-    fontSize: '0.75rem'
+    fontSize: '0.75rem',
   },
   dueDate: {
-    color: '#64748b',
-    fontWeight: '500'
+    color: 'rgba(255,255,255,0.4)',
+    fontWeight: '500',
   },
   priority: {
     fontWeight: '600',
-    fontSize: '0.75rem'
+    fontSize: '0.75rem',
   },
   quickActions: {
-    background: 'white',
+    background: 'rgba(255,255,255,0.04)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
     borderRadius: '16px',
     padding: '1.5rem',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    border: '1px solid #e2e8f0'
+    border: '1px solid rgba(255,255,255,0.08)',
+    boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
   },
   actionButtons: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '1rem',
-    marginTop: '1rem'
+    gap: '0.875rem',
+    marginTop: '1rem',
   },
   actionBtn: {
-    padding: '1rem 1.5rem',
-    background: 'white',
-    color: '#475569',
-    border: '2px solid #e2e8f0',
+    padding: '0.875rem 1.25rem',
+    background: 'rgba(255,255,255,0.05)',
+    color: 'rgba(255,255,255,0.7)',
+    border: '1px solid rgba(255,255,255,0.1)',
     borderRadius: '12px',
     fontSize: '0.875rem',
     fontWeight: '600',
@@ -688,7 +661,7 @@ const styles = {
     textAlign: 'left',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem'
+    gap: '0.5rem',
   },
   loadingContainer: {
     display: 'flex',
@@ -696,34 +669,30 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     padding: '4rem 2rem',
-    gap: '1rem'
+    gap: '1rem',
   },
   spinner: {
-    width: '48px',
-    height: '48px',
-    border: '4px solid #e2e8f0',
-    borderTop: '4px solid #3b82f6',
+    width: '44px',
+    height: '44px',
+    border: '3px solid rgba(255,255,255,0.1)',
+    borderTop: '3px solid #3b82f6',
     borderRadius: '50%',
-    animation: 'spin 1s linear infinite'
+    animation: 'dashSpin 0.9s linear infinite',
   },
   loadingText: {
-    color: '#64748b',
-    fontSize: '1.125rem',
+    color: 'rgba(255,255,255,0.45)',
+    fontSize: '1rem',
     fontWeight: '500',
-    margin: 0
-  }
+    margin: 0,
+  },
 };
 
-// Добавляем анимацию спиннера
-const spinnerStyles = `
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+// Inject spinner animation
+const _styleTag = document.createElement('style');
+_styleTag.textContent = '@keyframes dashSpin { to { transform: rotate(360deg); } }';
+if (!document.getElementById('dash-spin-style')) {
+  _styleTag.id = 'dash-spin-style';
+  document.head.appendChild(_styleTag);
 }
-`;
-
-// Добавляем стили в документ
-const styleSheet = document.styleSheets[0];
-styleSheet.insertRule(spinnerStyles, styleSheet.cssRules.length);
 
 export default StudentDashboard;

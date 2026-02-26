@@ -1,55 +1,47 @@
 import React from 'react';
 
-const Table = ({ columns, data, actions, onAction }) => {
+const Table = ({ columns = [], data = [], actions, onAction }) => {
   const getActionStyle = (type) => {
     switch (type) {
-      case 'primary':
-        return styles.primaryButton;
-      case 'secondary':
-        return styles.secondaryButton;
-      case 'danger':
-        return styles.dangerButton;
-      default:
-        return styles.defaultButton;
+      case 'primary': return s.btnPrimary;
+      case 'secondary': return s.btnSecondary;
+      case 'danger': return s.btnDanger;
+      default: return s.btnDefault;
     }
   };
 
   return (
-    <div style={styles.tableContainer}>
-      <table style={styles.table}>
+    <div style={s.wrap}>
+      <table style={s.table}>
         <thead>
           <tr>
-            {columns.map((column, index) => (
-              <th key={index} style={styles.th}>
-                {column.header}
-              </th>
+            {columns.map((col, i) => (
+              <th key={i} style={s.th}>{col.header}</th>
             ))}
             {actions && actions.length > 0 && (
-              <th key="actions" style={styles.th}>
-                Действия
-              </th>
+              <th style={s.th}>Действия</th>
             )}
           </tr>
         </thead>
         <tbody>
-          {data.map((row, rowIndex) => (
-            <tr key={rowIndex} style={styles.tr}>
-              {columns.map((column, colIndex) => (
-                <td key={colIndex} style={styles.td}>
-                  {row[column.key]}
-                </td>
+          {data.map((row, ri) => (
+            <tr
+              key={ri}
+              style={s.tr}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              {columns.map((col, ci) => (
+                <td key={ci} style={s.td}>{row[col.key]}</td>
               ))}
               {actions && actions.length > 0 && (
-                <td key="actions" style={{ ...styles.td, ...styles.actionsCell }}>
-                  <div style={styles.actionsContainer}>
-                    {actions.map((action, actionIndex) => (
+                <td style={{ ...s.td, whiteSpace: 'nowrap' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {actions.map((action, ai) => (
                       <button
-                        key={actionIndex}
+                        key={ai}
                         onClick={() => onAction && onAction(action.name, row)}
-                        style={{
-                          ...styles.actionButton,
-                          ...getActionStyle(action.type)
-                        }}
+                        style={{ ...s.actionBtn, ...getActionStyle(action.type) }}
                         title={action.label}
                       >
                         {action.label}
@@ -63,85 +55,74 @@ const Table = ({ columns, data, actions, onAction }) => {
         </tbody>
       </table>
       {data.length === 0 && (
-        <div style={styles.emptyState}>
-          Нет данных для отображения
+        <div style={s.empty}>
+          <span>🔍</span>
+          <span>Нет данных для отображения</span>
         </div>
       )}
     </div>
   );
 };
 
-const styles = {
-  tableContainer: {
-    backgroundColor: 'white',
+const s = {
+  wrap: {
+    background: 'transparent',
     borderRadius: '12px',
     overflow: 'hidden',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    border: '1px solid #e5e7eb'
   },
   table: {
     width: '100%',
-    borderCollapse: 'collapse'
+    borderCollapse: 'collapse',
   },
   th: {
-    backgroundColor: '#f8fafc',
-    padding: '1rem',
+    background: 'rgba(255,255,255,0.06)',
+    padding: '0.875rem 1rem',
     textAlign: 'left',
-    fontSize: '0.875rem',
-    fontWeight: '600',
-    color: '#374151',
-    borderBottom: '1px solid #e5e7eb'
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.5)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    borderBottom: '1px solid rgba(255,255,255,0.07)',
+    whiteSpace: 'nowrap',
   },
   tr: {
-    borderBottom: '1px solid #f3f4f6'
+    borderBottom: '1px solid rgba(255,255,255,0.05)',
+    transition: 'background 0.15s ease',
+    cursor: 'default',
   },
   td: {
-    padding: '1rem',
+    padding: '0.875rem 1rem',
     fontSize: '0.875rem',
-    color: '#6b7280',
-    borderBottom: '1px solid #f3f4f6'
-  },
-  emptyState: {
-    padding: '2rem',
-    textAlign: 'center',
-    color: '#9ca3af',
-    fontSize: '0.875rem'
-  },
-  actionsCell: {
-    whiteSpace: 'nowrap',
-    width: 'auto'
-  },
-  actionsContainer: {
-    display: 'flex',
-    gap: '0.5rem',
-    flexWrap: 'wrap'
-  },
-  actionButton: {
-    padding: '0.375rem 0.75rem',
-    fontSize: '0.75rem',
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: '500',
+    borderBottom: '1px solid rgba(255,255,255,0.04)',
+  },
+  empty: {
+    padding: '2.5rem',
+    textAlign: 'center',
+    color: 'rgba(255,255,255,0.25)',
+    fontSize: '0.9375rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.5rem',
+    fontWeight: '500',
+  },
+  actionBtn: {
+    padding: '0.35rem 0.75rem',
+    fontSize: '0.75rem',
+    fontWeight: '600',
     border: 'none',
-    borderRadius: '0.375rem',
+    borderRadius: '6px',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
-    whiteSpace: 'nowrap'
+    whiteSpace: 'nowrap',
   },
-  primaryButton: {
-    backgroundColor: '#3b82f6',
-    color: 'white'
-  },
-  secondaryButton: {
-    backgroundColor: '#6b7280',
-    color: 'white'
-  },
-  dangerButton: {
-    backgroundColor: '#ef4444',
-    color: 'white'
-  },
-  defaultButton: {
-    backgroundColor: '#e5e7eb',
-    color: '#374151'
-  }
+  btnPrimary: { background: 'rgba(59,130,246,0.25)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.3)' },
+  btnSecondary: { background: 'rgba(107,114,128,0.25)', color: '#d1d5db', border: '1px solid rgba(107,114,128,0.3)' },
+  btnDanger: { background: 'rgba(239,68,68,0.2)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' },
+  btnDefault: { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.12)' },
 };
 
 export default Table;

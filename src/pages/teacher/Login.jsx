@@ -1,50 +1,46 @@
 // src/pages/teacher/Login.jsx
-import React, { useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, getUserRole } from '../../services/auth';
+import { NeuroNoise } from '@paper-design/shaders-react';
+
+const MemoizedNeuroNoise = memo(NeuroNoise);
 
 const TeacherLogin = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+  const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  useEffect(() => {
+    const onResize = () => setSize({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!formData.username.trim() || !formData.password.trim()) {
       setError('Пожалуйста, заполните все поля');
       return;
     }
-    
     if (!formData.username.includes('@')) {
       setError('Введите корректный email с символом @');
       return;
     }
-
     setLoading(true);
     setError('');
-    
     try {
-      const result = await login(formData.username, formData.password);
+      await login(formData.username, formData.password);
       const role = getUserRole();
-      
       if (role !== 'teacher') {
         setError('Этот аккаунт не для преподавателей. Используйте вход для студентов.');
         return;
       }
-      
       navigate('/teacher/dashboard');
     } catch (err) {
       setError(err.message || 'Ошибка при входе в систему');
@@ -55,371 +51,325 @@ const TeacherLogin = () => {
 
   return (
     <div style={styles.page}>
-      <div style={styles.gradientBackground}></div>
-      
-      <div style={styles.mainContainer}>
-        <div style={styles.leftSection}>
-          <div style={styles.logoSection}>
-            <h1 style={styles.logo}>StudyMate</h1>
-            <p style={styles.tagline}>Панель преподавателя</p>
-          </div>
-          
+      <style>{globalCSS}</style>
+
+      {/* NeuroNoise WebGL shader — purple theme */}
+      <div style={styles.shaderWrap}>
+        <MemoizedNeuroNoise
+          colorBack="#0d0a1f"
+          colorFront="#5b21b6"
+          colorAccent="#a78bfa"
+          speed={0.5}
+          style={{ display: 'block', width: '100%', height: '100%' }}
+        />
+      </div>
+      <div style={styles.overlay} />
+
+      <div style={styles.card}>
+        {/* Left panel */}
+        <div style={styles.left}>
+          <div style={styles.brandIcon}>S</div>
+          <h1 style={styles.brandName}>StudyMate</h1>
+          <p style={styles.brandTagline}>Панель преподавателя</p>
+
           <div style={styles.features}>
-            <div style={styles.feature}>
-              <span style={styles.featureIcon}>👨‍🏫</span>
-              <span style={styles.featureText}>Управление курсами</span>
-            </div>
-            <div style={styles.feature}>
-              <span style={styles.featureIcon}>📝</span>
-              <span style={styles.featureText}>Оценка студентов</span>
-            </div>
-            <div style={styles.feature}>
-              <span style={styles.featureIcon}>📊</span>
-              <span style={styles.featureText}>Аналитика и отчеты</span>
-            </div>
+            {[
+              { icon: '👨‍🏫', text: 'Управление курсами' },
+              { icon: '📝', text: 'Оценка студентов' },
+              { icon: '📊', text: 'Аналитика и отчёты' },
+            ].map(f => (
+              <div key={f.text} style={styles.feature}>
+                <span style={styles.featureIcon}>{f.icon}</span>
+                <span>{f.text}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div style={styles.rightSection}>
-          <div style={styles.formContainer}>
-            <div style={styles.formHeader}>
-              <h2 style={styles.formTitle}>Вход для преподавателей</h2>
-              <p style={styles.formSubtitle}>Войдите в панель управления</p>
-            </div>
-            
+        {/* Right form */}
+        <div style={styles.right}>
+          <div style={styles.formWrap}>
+            <h2 style={styles.formTitle}>Вход для преподавателей</h2>
+            <p style={styles.formSub}>Войдите в панель управления</p>
+
             {error && (
-              <div style={styles.errorAlert}>
-                <span style={styles.alertIcon}>⚠️</span>
-                {error}
+              <div style={styles.errorBox}>
+                <span>⚠️</span> {error}
               </div>
             )}
-            
+
             <form onSubmit={handleSubmit} style={styles.form}>
-              <div style={styles.inputGroup}>
-                <label style={styles.inputLabel}>Email</label>
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Email</label>
                 <input
-                  type="email"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
+                  type="email" name="username"
+                  value={formData.username} onChange={handleChange}
                   placeholder="example@mail.com"
-                  style={styles.input}
-                  required
+                  style={styles.input} required
                 />
               </div>
-              
-              <div style={styles.inputGroup}>
-                <label style={styles.inputLabel}>Пароль</label>
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Пароль</label>
                 <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
+                  type="password" name="password"
+                  value={formData.password} onChange={handleChange}
                   placeholder="Введите пароль"
-                  style={styles.input}
-                  required
+                  style={styles.input} required
                 />
               </div>
-              
-              <button 
-                type="submit" 
-                style={{
-                  ...styles.submitButton,
-                  ...(loading && styles.submitButtonDisabled)
-                }}
+              <button
+                type="submit"
+                className="teacher-login-btn"
+                style={{ ...styles.btn, ...(loading ? styles.btnDisabled : {}) }}
                 disabled={loading}
               >
-                {loading ? (
-                  <>
-                    <div style={styles.spinner}></div>
-                    Вход...
-                  </>
-                ) : (
-                  'Войти'
-                )}
+                {loading
+                  ? <><span style={styles.spinner} />Вход...</>
+                  : 'Войти в систему'}
               </button>
             </form>
-            
+
             <div style={styles.footer}>
-              <p style={styles.footerText}>
+              <p style={styles.footerLine}>
                 Нет аккаунта?{' '}
-                <Link to="/teacher/register" style={styles.footerLink}>
-                  Зарегистрироваться
-                </Link>
+                <Link to="/teacher/register" style={styles.link}>Зарегистрироваться</Link>
               </p>
-              <p style={styles.footerText}>
+              <p style={styles.footerLine}>
                 Вы студент?{' '}
-                <Link to="/student/login" style={styles.footerLink}>
-                  Войти как студент
-                </Link>
+                <Link to="/student/login" style={styles.link}>Войти как студент</Link>
               </p>
             </div>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        input:focus {
-          border-color: #7c3aed !important;
-          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1) !important;
-        }
-        
-        button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4) !important;
-        }
-        
-        a:hover {
-          color: #6d28d9 !important;
-        }
-      `}</style>
     </div>
   );
 };
+
+const globalCSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  @keyframes blobMove1 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%      { transform: translate(40px,-30px) scale(1.08); }
+  }
+  @keyframes blobMove2 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%      { transform: translate(-30px,40px) scale(1.05); }
+  }
+  @keyframes blobMove3 {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%      { transform: translate(20px,20px) scale(1.1); }
+  }
+  @keyframes spinBtn { to { transform: rotate(360deg); } }
+  .teacher-login-btn:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 30px rgba(109,40,217,0.45) !important;
+  }
+`;
 
 const styles = {
   page: {
     minHeight: '100vh',
     width: '100vw',
-    background: '#ffffff',
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    background: '#0d0a1f',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '0',
-    margin: '0',
-    overflow: 'hidden',
-    position: 'relative'
-  },
-  
-  gradientBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(168,85,247,0.05) 100%)',
-    zIndex: 0
-  },
-  
-  mainContainer: {
-    width: '95vw',
-    height: '95vh',
-    background: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: '20px',
-    boxShadow: '0 25px 50px rgba(0, 0, 0, 0.15)',
-    display: 'flex',
-    overflow: 'hidden',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255, 255, 255, 0.5)',
+    fontFamily: "'Inter', -apple-system, sans-serif",
     position: 'relative',
-    zIndex: 1
+    overflow: 'hidden',
+    padding: '1rem',
   },
-  
-  leftSection: {
+  shaderWrap: {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 0,
+    willChange: 'transform',
+    transform: 'translateZ(0)',
+    contain: 'layout style paint',
+  },
+  shader: {
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    position: 'absolute',
+    inset: 0,
+    background: 'rgba(0,0,0,0.18)',
+    zIndex: 1,
+  },
+  card: {
+    position: 'relative',
+    zIndex: 1,
+    display: 'flex',
+    width: '100%',
+    maxWidth: '900px',
+    minHeight: '560px',
+    borderRadius: '24px',
+    overflow: 'hidden',
+    boxShadow: '0 32px 80px rgba(0,0,0,0.18)',
+  },
+  left: {
     flex: 1,
-    background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
+    background: 'linear-gradient(145deg, #6d28d9 0%, #9333ea 100%)',
     color: 'white',
-    padding: '60px',
+    padding: '3.5rem',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
-    position: 'relative'
   },
-  
-  logoSection: {
-    marginBottom: '60px'
+  brandIcon: {
+    width: '56px', height: '56px',
+    borderRadius: '16px',
+    background: 'rgba(255,255,255,0.2)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: '1.75rem', fontWeight: '800',
+    marginBottom: '1.25rem',
   },
-  
-  logo: {
-    fontSize: '64px',
+  brandName: {
+    fontSize: '2.5rem',
     fontWeight: '800',
-    marginBottom: '20px',
-    background: 'linear-gradient(135deg, #fff 0%, #e9d5ff 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
+    marginBottom: '0.5rem',
+    color: '#fff',
   },
-  
-  tagline: {
-    fontSize: '24px',
-    opacity: 0.9,
-    lineHeight: 1.4,
-    fontWeight: '300'
+  brandTagline: {
+    fontSize: '1.0625rem',
+    opacity: 0.8,
+    fontWeight: '400',
+    marginBottom: '2.5rem',
   },
-  
   features: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '25px'
+    gap: '1.125rem',
   },
-  
   feature: {
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
-    fontSize: '18px',
-    fontWeight: '500'
+    gap: '1rem',
+    fontSize: '1rem',
+    fontWeight: '500',
   },
-  
   featureIcon: {
-    fontSize: '24px',
-    width: '50px',
-    height: '50px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'rgba(255, 255, 255, 0.15)',
+    width: '44px', height: '44px',
+    background: 'rgba(255,255,255,0.15)',
     borderRadius: '12px',
-    backdropFilter: 'blur(10px)'
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: '1.25rem',
+    flexShrink: 0,
   },
-  
-  featureText: {
-    fontSize: '18px'
-  },
-  
-  rightSection: {
-    flex: '0 0 500px',
+  right: {
+    flex: '0 0 420px',
+    background: 'rgba(255,255,255,0.97)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '40px',
-    background: 'rgba(255, 255, 255, 0.8)',
-    backdropFilter: 'blur(10px)'
+    padding: '2.5rem',
   },
-  
-  formContainer: {
+  formWrap: {
     width: '100%',
-    maxWidth: '380px'
+    maxWidth: '370px',
   },
-  
-  formHeader: {
-    textAlign: 'center',
-    marginBottom: '40px'
-  },
-  
   formTitle: {
-    fontSize: '32px',
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: '12px'
+    fontSize: '1.625rem',
+    fontWeight: '800',
+    color: '#1e293b',
+    marginBottom: '0.375rem',
   },
-  
-  formSubtitle: {
-    fontSize: '16px',
-    color: '#6b7280',
-    fontWeight: '400'
+  formSub: {
+    fontSize: '0.9375rem',
+    color: '#64748b',
+    marginBottom: '1.75rem',
   },
-  
-  errorAlert: {
+  errorBox: {
     background: '#fef2f2',
     border: '1px solid #fecaca',
     color: '#dc2626',
-    padding: '16px',
+    padding: '0.875rem 1rem',
     borderRadius: '12px',
-    marginBottom: '24px',
+    marginBottom: '1.25rem',
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    fontSize: '14px',
-    fontWeight: '500'
+    gap: '0.5rem',
+    fontSize: '0.875rem',
+    fontWeight: '500',
   },
-  
-  alertIcon: {
-    fontSize: '18px'
-  },
-  
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '24px'
+    gap: '1.125rem',
   },
-  
-  inputGroup: {
+  fieldGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px'
+    gap: '0.375rem',
   },
-  
-  inputLabel: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: '4px'
+  label: {
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    color: '#475569',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
   },
-  
   input: {
-    padding: '16px',
-    border: '2px solid #e5e7eb',
+    padding: '0.875rem 1rem',
+    border: '1.5px solid #e2e8f0',
     borderRadius: '12px',
-    fontSize: '16px',
-    transition: 'all 0.2s ease',
+    fontSize: '0.9375rem',
+    fontFamily: "'Inter', sans-serif",
+    color: '#1e293b',
+    background: '#f8fafc',
     outline: 'none',
-    fontWeight: '400',
-    background: '#ffffff',
+    transition: 'all 0.18s ease',
     width: '100%',
     boxSizing: 'border-box',
-    color: '#1f2937'
   },
-  
-  submitButton: {
-    background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+  btn: {
+    marginTop: '0.5rem',
+    width: '100%',
+    padding: '1rem',
+    background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
     color: 'white',
     border: 'none',
-    padding: '18px',
     borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: '600',
+    fontSize: '1rem',
+    fontWeight: '700',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '10px',
-    marginTop: '8px',
-    boxShadow: '0 4px 15px rgba(124, 58, 237, 0.4)',
-    width: '100%'
+    gap: '0.625rem',
+    boxShadow: '0 4px 16px rgba(109,40,217,0.35)',
+    transition: 'all 0.2s ease',
   },
-  
-  submitButtonDisabled: {
-    opacity: 0.6,
-    cursor: 'not-allowed'
+  btnDisabled: {
+    opacity: 0.65,
+    cursor: 'not-allowed',
   },
-  
   spinner: {
-    width: '20px',
-    height: '20px',
-    border: '2px solid transparent',
-    borderTop: '2px solid white',
+    width: '18px', height: '18px',
+    border: '2.5px solid rgba(255,255,255,0.4)',
+    borderTopColor: 'white',
     borderRadius: '50%',
-    animation: 'spin 1s linear infinite'
+    animation: 'spinBtn 0.75s linear infinite',
+    display: 'inline-block',
   },
-  
   footer: {
+    marginTop: '1.5rem',
+    paddingTop: '1.25rem',
+    borderTop: '1px solid #f1f5f9',
+  },
+  footerLine: {
+    fontSize: '0.875rem',
+    color: '#64748b',
+    marginTop: '0.5rem',
     textAlign: 'center',
-    marginTop: '32px',
-    paddingTop: '24px',
-    borderTop: '1px solid #f3f4f6'
   },
-  
-  footerText: {
-    color: '#6b7280',
-    fontSize: '14px',
-    fontWeight: '400',
-    marginTop: '8px'
-  },
-  
-  footerLink: {
+  link: {
     color: '#7c3aed',
-    textDecoration: 'none',
     fontWeight: '600',
-    transition: 'color 0.2s ease'
-  }
+    textDecoration: 'none',
+  },
 };
 
 export default TeacherLogin;

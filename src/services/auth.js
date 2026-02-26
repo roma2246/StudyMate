@@ -1,7 +1,10 @@
 // src/services/auth.js
 
+// Backend URL logic:
+// If running inside Docker Compose frontend (Nginx), it serves from /. The proxy passes /api/ to backend:8080.
+// If running from Vite directly (localhost:5173), we want to hit localhost:8080.
 const CURRENT_USER_KEY = 'currentUser';
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const BASE_URL = import.meta.env.VITE_API_URL || (window.location.port === '5173' ? 'http://localhost:8080' : '');
 
 const postJSON = async (path, payload) => {
   const res = await fetch(`${BASE_URL}${path}`, {
