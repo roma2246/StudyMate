@@ -180,20 +180,20 @@ const TeacherDashboard = () => {
 };
 
 const s = {
-  page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0a1628', fontFamily: "'Inter',-apple-system,sans-serif" },
+  page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'transparent', fontFamily: "'Inter',-apple-system,sans-serif" },
   body: { display: 'flex', flex: 1 },
-  main: { flex: 1, padding: '2rem', overflowY: 'auto', background: 'linear-gradient(160deg,#0a1628 0%,#0f1e3a 100%)' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '1.5rem 2rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' },
+  main: { flex: 1, padding: '2rem', overflowY: 'auto', background: 'transparent' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'rgba(15, 23, 42, 0.45)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', padding: '1.5rem 2rem', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' },
   title: { fontSize: '1.75rem', fontWeight: '800', color: '#a78bfa', margin: '0 0 0.25rem 0', letterSpacing: '-0.02em' },
   subtitle: { color: 'rgba(255,255,255,0.45)', fontSize: '0.9rem', margin: 0 },
   headerActions: { display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 },
   btnPrimary: { padding: '0.5rem 1.125rem', background: 'linear-gradient(135deg,#8b5cf6,#5b21b6)', color: '#fff', border: 'none', borderRadius: '9px', fontSize: '0.875rem', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(139,92,246,0.4)' },
-  btnOutline: { padding: '0.5rem 1.125rem', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '9px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer' },
+  btnOutline: { padding: '0.5rem 1.125rem', background: 'rgba(15, 23, 42, 0.45)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '9px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer' },
   loading: { color: 'rgba(255,255,255,0.5)', textAlign: 'center', padding: '3rem', fontSize: '1rem' },
   statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' },
   grid: { display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' },
   col: { display: 'flex', flexDirection: 'column', gap: '1.25rem' },
-  card: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '1.5rem' },
+  card: { background: 'rgba(15, 23, 42, 0.45)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', padding: '1.5rem' },
   cardHeader: { marginBottom: '1.25rem', paddingBottom: '0.875rem', borderBottom: '1px solid rgba(255,255,255,0.07)' },
   cardTitle: { fontSize: '1rem', fontWeight: '700', color: 'rgba(255,255,255,0.9)', margin: 0 },
   empty: { color: 'rgba(255,255,255,0.25)', textAlign: 'center', padding: '1.5rem', fontSize: '0.9rem' },
@@ -208,7 +208,7 @@ const s = {
   rankGroup: { fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' },
   rankGpa: { display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.3)', color: '#fbbf24', padding: '0.375rem 0.625rem', borderRadius: '8px', minWidth: '48px' },
   rankGpaLabel: { fontSize: '0.6rem', opacity: 0.7 },
-  qBtn: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.875rem 1rem', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease' },
+  qBtn: { display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.875rem 1rem', background: 'rgba(15, 23, 42, 0.45)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease' },
 };
 
 export default TeacherDashboard;

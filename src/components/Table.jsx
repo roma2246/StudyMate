@@ -28,7 +28,7 @@ const Table = ({ columns = [], data = [], actions, onAction }) => {
             <tr
               key={ri}
               style={s.tr}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               {columns.map((col, ci) => (
@@ -75,7 +75,7 @@ const s = {
     borderCollapse: 'collapse',
   },
   th: {
-    background: 'rgba(255,255,255,0.06)',
+    background: 'rgba(15, 23, 42, 0.45)',
     padding: '0.875rem 1rem',
     textAlign: 'left',
     fontSize: '0.75rem',
@@ -96,7 +96,7 @@ const s = {
     fontSize: '0.875rem',
     color: 'rgba(255,255,255,0.7)',
     fontWeight: '500',
-    borderBottom: '1px solid rgba(255,255,255,0.04)',
+    borderBottom: '1px solid rgba(255,255,255,0.06)',
   },
   empty: {
     padding: '2.5rem',
@@ -122,7 +122,7 @@ const s = {
   btnPrimary: { background: 'rgba(59,130,246,0.25)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.3)' },
   btnSecondary: { background: 'rgba(107,114,128,0.25)', color: '#d1d5db', border: '1px solid rgba(107,114,128,0.3)' },
   btnDanger: { background: 'rgba(239,68,68,0.2)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.3)' },
-  btnDefault: { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.12)' },
+  btnDefault: { background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.12)' },
 };
 
 export default Table;

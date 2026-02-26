@@ -160,10 +160,10 @@ const StudentGrades = () => {
 };
 
 const s = {
-  page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0a1628', fontFamily: "'Inter',-apple-system,sans-serif" },
+  page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'transparent', fontFamily: "'Inter',-apple-system,sans-serif" },
   body: { display: 'flex', flex: 1 },
-  main: { flex: 1, padding: '2rem', overflowY: 'auto', background: 'linear-gradient(160deg,#0a1628 0%,#0f1e3a 100%)' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', padding: '1.5rem 2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' },
+  main: { flex: 1, padding: '2rem', overflowY: 'auto', background: 'transparent' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.45)', backdropFilter: 'blur(12px)', padding: '1.5rem 2rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.12)' },
   title: { fontSize: '1.75rem', fontWeight: '800', color: '#60a5fa', margin: '0 0 0.25rem 0', letterSpacing: '-0.02em' },
   subtitle: { color: 'rgba(255,255,255,0.45)', fontSize: '0.9rem', margin: 0 },
   loading: { color: 'rgba(255,255,255,0.5)', textAlign: 'center', padding: '3rem', fontSize: '1rem' },
@@ -179,8 +179,8 @@ const s = {
   gpaScaleRange: { fontSize: '0.8125rem', color: 'rgba(255,255,255,0.6)', fontWeight: '700', width: '55px' },
   gpaScaleLabel: { fontSize: '0.8125rem', color: 'rgba(255,255,255,0.4)' },
   // Subject card
-  subjectCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', overflow: 'hidden' },
-  subjectHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 1.5rem', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.06)' },
+  subjectCard: { background: 'rgba(15, 23, 42, 0.45)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', overflow: 'hidden' },
+  subjectHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 1.5rem', background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(15, 23, 42, 0.45)' },
   subjectName: { fontSize: '1.125rem', fontWeight: '700', color: '#fff', margin: '0 0 0.25rem 0' },
   subjectCount: { fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', fontWeight: '500' },
   subjectAvg: { textAlign: 'right' },
@@ -192,7 +192,7 @@ const s = {
   gradeRowTitle: { fontSize: '0.875rem', fontWeight: '700', color: 'rgba(255,255,255,0.8)', marginBottom: '0.2rem' },
   gradeRowSub: { fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontWeight: '500' },
   gradeBadge: { fontSize: '1.25rem', fontWeight: '800', width: '44px', height: '44px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid', flexShrink: 0 },
-  empty: { textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)', fontSize: '1.125rem', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)' },
+  empty: { textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)', fontSize: '1.125rem', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(15, 23, 42, 0.45)' },
 };
 
 export default StudentGrades;

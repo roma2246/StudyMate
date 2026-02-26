@@ -402,11 +402,11 @@ const StudentDashboard = () => {
                   >
                     👤 Редактировать профиль
                   </button>
-                  <button style={styles.actionBtn}>
+                  <button
+                    style={styles.actionBtn}
+                    onClick={() => navigate('/student/assignments')}
+                  >
                     📚 Загрузить материалы
-                  </button>
-                  <button style={styles.actionBtn}>
-                    💬 Связаться с преподавателем
                   </button>
                 </div>
               </div>
@@ -423,7 +423,7 @@ const styles = {
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: '#0a1628',
+    backgroundColor: 'transparent',
     fontFamily: "'Inter', -apple-system, sans-serif",
   },
   appBody: {
@@ -434,19 +434,19 @@ const styles = {
     flex: 1,
     padding: '2rem',
     overflowY: 'auto',
-    background: 'linear-gradient(160deg, #0a1628 0%, #0f1e3a 100%)',
+    background: 'transparent',
   },
   pageHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: '2rem',
-    background: 'rgba(255,255,255,0.04)',
+    background: 'rgba(15, 23, 42, 0.45)',
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
     padding: '1.5rem 2rem',
     borderRadius: '16px',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.12)',
     boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
   },
   pageTitle: {
@@ -481,7 +481,7 @@ const styles = {
   },
   btnOutline: {
     padding: '0.625rem 1.25rem',
-    background: 'rgba(255,255,255,0.06)',
+    background: 'rgba(15, 23, 42, 0.45)',
     color: 'rgba(255,255,255,0.7)',
     border: '1px solid rgba(255,255,255,0.12)',
     borderRadius: '10px',
@@ -506,12 +506,12 @@ const styles = {
     marginBottom: '1.75rem',
   },
   chartContainer: {
-    background: 'rgba(255,255,255,0.04)',
+    background: 'rgba(15, 23, 42, 0.45)',
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
     borderRadius: '16px',
     padding: '1.5rem',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.12)',
     boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
   },
   dashboardGrid: {
@@ -526,12 +526,12 @@ const styles = {
     gap: '1.25rem',
   },
   sectionCard: {
-    background: 'rgba(255,255,255,0.04)',
+    background: 'rgba(15, 23, 42, 0.45)',
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
     borderRadius: '16px',
     padding: '1.5rem',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.12)',
     boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
     height: 'fit-content',
   },
@@ -541,7 +541,7 @@ const styles = {
     alignItems: 'center',
     marginBottom: '1.25rem',
     paddingBottom: '1rem',
-    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    borderBottom: '1px solid rgba(255,255,255,0.12)',
   },
   sectionTitle: {
     fontSize: '1.0625rem',
@@ -580,7 +580,7 @@ const styles = {
     display: 'flex',
     gap: '1rem',
     padding: '1rem',
-    background: 'rgba(255,255,255,0.04)',
+    background: 'rgba(15, 23, 42, 0.45)',
     borderRadius: '12px',
     border: '1px solid rgba(255,255,255,0.07)',
     transition: 'all 0.2s ease',
@@ -634,12 +634,12 @@ const styles = {
     fontSize: '0.75rem',
   },
   quickActions: {
-    background: 'rgba(255,255,255,0.04)',
+    background: 'rgba(15, 23, 42, 0.45)',
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
     borderRadius: '16px',
     padding: '1.5rem',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.12)',
     boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
   },
   actionButtons: {
@@ -652,7 +652,7 @@ const styles = {
     padding: '0.875rem 1.25rem',
     background: 'rgba(255,255,255,0.05)',
     color: 'rgba(255,255,255,0.7)',
-    border: '1px solid rgba(255,255,255,0.1)',
+    border: '1px solid rgba(255,255,255,0.06)',
     borderRadius: '12px',
     fontSize: '0.875rem',
     fontWeight: '600',
@@ -674,7 +674,7 @@ const styles = {
   spinner: {
     width: '44px',
     height: '44px',
-    border: '3px solid rgba(255,255,255,0.1)',
+    border: '3px solid rgba(255,255,255,0.06)',
     borderTop: '3px solid #3b82f6',
     borderRadius: '50%',
     animation: 'dashSpin 0.9s linear infinite',

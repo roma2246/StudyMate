@@ -70,7 +70,7 @@ const TeacherStudents = () => {
               onChange={e => setSearchTerm(e.target.value)}
               style={s.search}
               onFocus={e => { e.target.style.borderColor = '#8b5cf6'; e.target.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.15)'; }}
-              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+              onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.06)'; e.target.style.boxShadow = 'none'; }}
             />
           </div>
 
@@ -117,7 +117,7 @@ const TeacherStudents = () => {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.375rem' }}>
                       {availableGroups.map(g => (
                         <button key={g} type="button" onClick={() => setFormData(p => ({ ...p, group: g }))}
-                          style={{ ...s.groupPill, background: formData.group === g ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.06)', color: formData.group === g ? '#c4b5fd' : 'rgba(255,255,255,0.55)', borderColor: formData.group === g ? 'rgba(139,92,246,0.5)' : 'rgba(255,255,255,0.1)' }}>
+                          style={{ ...s.groupPill, background: formData.group === g ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.06)', color: formData.group === g ? '#c4b5fd' : 'rgba(255,255,255,0.55)', borderColor: formData.group === g ? 'rgba(139,92,246,0.5)' : 'rgba(255,255,255,0.06)' }}>
                           {g}
                         </button>
                       ))}
@@ -138,23 +138,23 @@ const TeacherStudents = () => {
 };
 
 const s = {
-  page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0a1628', fontFamily: "'Inter',-apple-system,sans-serif" },
+  page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'transparent', fontFamily: "'Inter',-apple-system,sans-serif" },
   body: { display: 'flex', flex: 1 },
-  main: { flex: 1, padding: '2rem', overflowY: 'auto', background: 'linear-gradient(160deg,#0a1628 0%,#0f1e3a 100%)' },
-  header: { background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '1.5rem 2rem', marginBottom: '1.25rem' },
+  main: { flex: 1, padding: '2rem', overflowY: 'auto', background: 'transparent' },
+  header: { background: 'rgba(15, 23, 42, 0.45)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', padding: '1.5rem 2rem', marginBottom: '1.25rem' },
   title: { fontSize: '1.75rem', fontWeight: '800', color: '#a78bfa', margin: '0 0 0.25rem 0', letterSpacing: '-0.02em' },
   subtitle: { color: 'rgba(255,255,255,0.45)', fontSize: '0.9rem', margin: 0 },
   searchWrap: { marginBottom: '1.25rem' },
-  search: { width: '100%', padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '0.9375rem', color: '#fff', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', transition: 'all 0.2s ease' },
+  search: { width: '100%', padding: '0.75rem 1rem', background: 'rgba(15, 23, 42, 0.45)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', fontSize: '0.9375rem', color: '#fff', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', transition: 'all 0.2s ease' },
   loading: { color: 'rgba(255,255,255,0.5)', textAlign: 'center', padding: '3rem' },
-  tableWrap: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', overflow: 'hidden' },
+  tableWrap: { background: 'rgba(15, 23, 42, 0.45)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', overflow: 'hidden' },
   overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' },
-  modal: { background: '#0f1e3a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '2rem', width: '100%', maxWidth: '480px' },
+  modal: { background: '#0f1e3a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', padding: '2rem', width: '100%', maxWidth: '480px' },
   mHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' },
   mTitle: { fontSize: '1.125rem', fontWeight: '800', color: '#fff', margin: 0 },
-  mClose: { background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem' },
+  mClose: { background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem' },
   label: { display: 'block', fontSize: '0.8125rem', fontWeight: '600', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' },
-  input: { width: '100%', padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.9375rem', color: '#fff', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' },
+  input: { width: '100%', padding: '0.75rem 1rem', background: 'rgba(15, 23, 42, 0.45)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', fontSize: '0.9375rem', color: '#fff', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' },
   groupsHint: { fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', fontWeight: '600' },
   groupPill: { padding: '0.25rem 0.75rem', borderRadius: '100px', fontSize: '0.75rem', fontWeight: '600', cursor: 'pointer', border: '1px solid', transition: 'all 0.15s ease' },
   cancelBtn: { padding: '0.625rem 1.25rem', background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer' },

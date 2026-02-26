@@ -23,12 +23,12 @@ const Card = ({ title, value, subtitle, icon, color = 'blue' }) => {
   return (
     <div
       style={{
-        background: 'rgba(255,255,255,0.04)',
+        background: 'rgba(15, 23, 42, 0.45)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         borderRadius: '16px',
         padding: '1.375rem 1.5rem',
-        border: `1px solid rgba(255,255,255,0.08)`,
+        border: `1px solid rgba(255,255,255,0.12)`,
         borderTop: `2px solid ${accent}`,
         transition: 'all 0.22s ease',
         cursor: 'default',

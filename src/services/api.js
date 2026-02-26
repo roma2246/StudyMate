@@ -2,8 +2,9 @@
 // Реальные вызовы к Spring Boot бэкенду
 // Backend URL logic:
 // If running inside Docker Compose frontend (Nginx), it serves from /. The proxy passes /api/ to backend:8080.
-// If running from Vite directly (localhost:5173), we want to hit localhost:8080.
-const BASE_URL = import.meta.env.VITE_API_URL || (window.location.port === '5173' ? 'http://localhost:8080' : '');
+// If running from Vite directly (dev mode), we want to hit localhost:8080.
+const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const BASE_URL = import.meta.env.VITE_API_URL || (isDev ? 'http://localhost:8080' : '');
 import { getToken } from './auth';
 
 const fetchJSON = async (path, options = {}) => {
@@ -57,9 +58,9 @@ export const getDashboardStats = async () => {
 export const getTopStudents = async () => getStudents();
 export const getGpaDistribution = async () => getGrades();
 
-// Student Profile APIs — зависит от вашей модели; пока можно получить по текущему пользователю на фронте
+// Student Profile APIs
 export const getStudentProfile = async () => ({ message: 'Use /api/students and /api/grades endpoints' });
-export const updateStudentProfile = async () => ({ message: 'Not implemented on backend yet' });
+export const updateStudentProfile = (studentId, payload) => fetchJSON(`/api/students/${studentId}`, { method: 'PUT', body: JSON.stringify(payload) });
 
 // Schedule APIs
 export const getScheduleByStudent = (studentId) => fetchJSON(`/api/schedule/student/${studentId}`);

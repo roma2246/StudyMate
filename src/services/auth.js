@@ -2,9 +2,10 @@
 
 // Backend URL logic:
 // If running inside Docker Compose frontend (Nginx), it serves from /. The proxy passes /api/ to backend:8080.
-// If running from Vite directly (localhost:5173), we want to hit localhost:8080.
+// If running from Vite directly (dev mode), we want to hit localhost:8080.
+const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const BASE_URL = import.meta.env.VITE_API_URL || (isDev ? 'http://localhost:8080' : '');
 const CURRENT_USER_KEY = 'currentUser';
-const BASE_URL = import.meta.env.VITE_API_URL || (window.location.port === '5173' ? 'http://localhost:8080' : '');
 
 const postJSON = async (path, payload) => {
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -18,6 +19,32 @@ const postJSON = async (path, payload) => {
   }
   return res.json();
 };
+
+const putJSON = async (path, payload) => {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP ${res.status}`);
+  }
+  return res.json();
+};
+
+export const updateUserPassword = async (userId, currentPassword, newPassword) => {
+  return await putJSON(`/api/auth/${userId}/password`, { currentPassword, newPassword });
+};
+
+export const updateUserProfile = async (userId, name, email) => {
+  const user = await putJSON(`/api/auth/${userId}/profile`, { name, email });
+  // Обновляем текущего пользователя в localStorage
+  const current = JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || '{}');
+  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify({ ...current, ...user }));
+  return user;
+};
+
 
 export const login = async (username, password) => {
   const user = await postJSON('/api/auth/login', { username, password });

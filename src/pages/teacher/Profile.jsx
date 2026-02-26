@@ -44,7 +44,7 @@ const TeacherProfile = () => {
   const initials = profile.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   const inputFocus = (e) => { e.target.style.borderColor = '#8b5cf6'; e.target.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.15)'; };
-  const inputBlur = (e) => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; };
+  const inputBlur = (e) => { e.target.style.borderColor = 'rgba(255,255,255,0.06)'; e.target.style.boxShadow = 'none'; };
 
   const field = (label, name, value, type, obj, setObj) => (
     <div style={s.formGroup}>
@@ -140,27 +140,27 @@ const TeacherProfile = () => {
 };
 
 const s = {
-  page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0a1628', fontFamily: "'Inter',-apple-system,sans-serif" },
+  page: { minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'transparent', fontFamily: "'Inter',-apple-system,sans-serif" },
   body: { display: 'flex', flex: 1 },
-  main: { flex: 1, padding: '2rem', overflowY: 'auto', background: 'linear-gradient(160deg,#0a1628 0%,#0f1e3a 100%)' },
-  header: { background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '1.75rem 2rem', marginBottom: '1.25rem' },
+  main: { flex: 1, padding: '2rem', overflowY: 'auto', background: 'transparent' },
+  header: { background: 'rgba(15, 23, 42, 0.45)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', padding: '1.75rem 2rem', marginBottom: '1.25rem' },
   avatarWrap: { display: 'flex', alignItems: 'center', gap: '1.25rem' },
   avatar: { width: '64px', height: '64px', borderRadius: '16px', background: 'linear-gradient(135deg,#8b5cf6,#5b21b6)', color: '#fff', fontWeight: '800', fontSize: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(139,92,246,0.4)', flexShrink: 0 },
   title: { fontSize: '1.75rem', fontWeight: '800', color: '#fff', margin: '0 0 0.25rem 0', letterSpacing: '-0.02em' },
   subtitle: { color: 'rgba(255,255,255,0.45)', fontSize: '0.9rem', margin: 0, fontWeight: '500' },
   statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px,1fr))', gap: '1rem', marginBottom: '1.25rem' },
-  statCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' },
+  statCard: { background: 'rgba(15, 23, 42, 0.45)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '14px', padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' },
   statIcon: { fontSize: '2rem', width: '52px', height: '52px', background: 'rgba(139,92,246,0.15)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   statVal: { fontSize: '2rem', fontWeight: '800', color: '#a78bfa', lineHeight: 1 },
   statLbl: { fontSize: '0.8125rem', color: 'rgba(255,255,255,0.4)', fontWeight: '600', marginTop: '0.25rem' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px,1fr))', gap: '1.25rem' },
-  card: { background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '1.75rem' },
+  card: { background: 'rgba(15, 23, 42, 0.45)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', padding: '1.75rem' },
   cardTitle: { fontSize: '1rem', fontWeight: '700', color: '#fff', marginBottom: '1.25rem', paddingBottom: '0.875rem', borderBottom: '1px solid rgba(255,255,255,0.07)' },
   form: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   formGroup: { display: 'flex', flexDirection: 'column', gap: '0.375rem' },
   label: { fontSize: '0.8125rem', fontWeight: '600', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em' },
-  input: { padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.9375rem', color: '#fff', outline: 'none', fontFamily: 'inherit', transition: 'all 0.2s ease' },
-  select: { padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '0.9375rem', color: '#fff', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' },
+  input: { padding: '0.75rem 1rem', background: 'rgba(15, 23, 42, 0.45)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', fontSize: '0.9375rem', color: '#fff', outline: 'none', fontFamily: 'inherit', transition: 'all 0.2s ease' },
+  select: { padding: '0.75rem 1rem', background: 'rgba(15, 23, 42, 0.45)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', fontSize: '0.9375rem', color: '#fff', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' },
   help: { fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' },
   btn: { padding: '0.75rem 1.5rem', background: 'linear-gradient(135deg,#8b5cf6,#5b21b6)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '0.9375rem', fontWeight: '700', cursor: 'pointer', alignSelf: 'flex-start', boxShadow: '0 4px 12px rgba(139,92,246,0.4)' },
 };

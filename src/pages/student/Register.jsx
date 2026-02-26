@@ -2,9 +2,6 @@
 import React, { memo, useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../../services/auth';
-import { NeuroNoise } from '@paper-design/shaders-react';
-
-const MemoizedNeuroNoise = memo(NeuroNoise);
 
 const StudentRegister = () => {
   const [formData, setFormData] = useState({
@@ -64,16 +61,7 @@ const StudentRegister = () => {
     <div style={styles.page}>
       <style>{globalCSS}</style>
 
-      {/* NeuroNoise WebGL shader */}
-      <div style={styles.shaderWrap}>
-        <MemoizedNeuroNoise
-          colorBack="#0a1628"
-          colorFront="#1d4ed8"
-          colorAccent="#60a5fa"
-          speed={0.5}
-          style={{ display: 'block', width: '100%', height: '100%' }}
-        />
-      </div>
+      {/* Using global shader background from App.jsx */}
       <div style={styles.overlay} />
 
       <div style={styles.card}>
@@ -186,7 +174,7 @@ const styles = {
   page: {
     minHeight: '100vh',
     width: '100vw',
-    background: '#0a1628',
+    background: 'transparent',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -195,18 +183,10 @@ const styles = {
     overflow: 'hidden',
     padding: '1rem',
   },
-  shaderWrap: {
-    position: 'absolute',
-    inset: 0,
-    zIndex: 0,
-    willChange: 'transform',
-    transform: 'translateZ(0)',
-    contain: 'layout style paint',
-  },
   overlay: {
     position: 'absolute',
     inset: 0,
-    background: 'rgba(0,0,0,0.18)',
+    background: 'transparent',
     zIndex: 1,
   },
   card: {
@@ -243,7 +223,7 @@ const styles = {
     position: 'absolute',
     width: '260px', height: '260px',
     borderRadius: '50%',
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.12)',
     top: '-80px', right: '-80px',
     zIndex: 0,
   },
@@ -287,8 +267,8 @@ const styles = {
     fontWeight: '400', lineHeight: 1.5,
   },
   aboutBlock: {
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(15, 23, 42, 0.45)',
+    border: '1px solid rgba(255,255,255,0.06)',
     borderRadius: '16px',
     padding: '1.25rem 1.375rem',
   },
@@ -297,7 +277,7 @@ const styles = {
     fontWeight: '400', lineHeight: 1.7, margin: 0,
   },
   divider: {
-    height: '1px', background: 'rgba(255,255,255,0.1)', margin: '0.875rem 0',
+    height: '1px', background: 'rgba(15, 23, 42, 0.45)', margin: '0.875rem 0',
   },
   aboutHint: {
     fontSize: '0.8125rem', color: 'rgba(255,255,255,0.4)',

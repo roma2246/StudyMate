@@ -2,9 +2,6 @@
 import React, { memo, useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login, getUserRole } from '../../services/auth';
-import { NeuroNoise } from '@paper-design/shaders-react';
-
-const MemoizedNeuroNoise = memo(NeuroNoise);
 
 const TeacherLogin = () => {
   const [formData, setFormData] = useState({ username: '', password: '' });
@@ -53,16 +50,7 @@ const TeacherLogin = () => {
     <div style={styles.page}>
       <style>{globalCSS}</style>
 
-      {/* NeuroNoise WebGL shader — purple theme */}
-      <div style={styles.shaderWrap}>
-        <MemoizedNeuroNoise
-          colorBack="#0d0a1f"
-          colorFront="#5b21b6"
-          colorAccent="#a78bfa"
-          speed={0.5}
-          style={{ display: 'block', width: '100%', height: '100%' }}
-        />
-      </div>
+      {/* Using global shader background from App.jsx */}
       <div style={styles.overlay} />
 
       <div style={styles.card}>
@@ -171,7 +159,7 @@ const styles = {
   page: {
     minHeight: '100vh',
     width: '100vw',
-    background: '#0d0a1f',
+    background: 'transparent',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -180,22 +168,10 @@ const styles = {
     overflow: 'hidden',
     padding: '1rem',
   },
-  shaderWrap: {
-    position: 'absolute',
-    inset: 0,
-    zIndex: 0,
-    willChange: 'transform',
-    transform: 'translateZ(0)',
-    contain: 'layout style paint',
-  },
-  shader: {
-    width: '100%',
-    height: '100%',
-  },
   overlay: {
     position: 'absolute',
     inset: 0,
-    background: 'rgba(0,0,0,0.18)',
+    background: 'transparent',
     zIndex: 1,
   },
   card: {

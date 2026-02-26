@@ -93,7 +93,9 @@ const styles = {
   sidebar: {
     width: '260px',
     minWidth: '260px',
-    backgroundColor: '#1e293b',
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backdropFilter: 'blur(24px)',
+    borderRight: '1px solid rgba(15, 23, 42, 0.45)',
     height: 'calc(100vh - 72px)',
     position: 'sticky',
     top: '72px',
@@ -107,7 +109,7 @@ const styles = {
     alignItems: 'center',
     gap: '0.875rem',
     padding: '1.5rem',
-    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    borderBottom: '1px solid rgba(255,255,255,0.12)',
   },
   logoIcon: {
     width: '40px',

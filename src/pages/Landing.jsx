@@ -284,7 +284,7 @@ const s = {
     navActions: { display: 'flex', gap: '0.75rem' },
     navBtnOutline: {
         padding: '0.5rem 1rem',
-        background: 'rgba(255,255,255,0.06)',
+        background: 'rgba(15, 23, 42, 0.45)',
         color: 'rgba(255,255,255,0.8)',
         border: '1px solid rgba(255,255,255,0.12)',
         borderRadius: '8px',
@@ -380,7 +380,7 @@ const s = {
     heroStat: { display: 'flex', flexDirection: 'column', gap: '0.25rem' },
     heroStatNum: { fontSize: '2rem', fontWeight: '800', color: '#60a5fa' },
     heroStatLabel: { fontSize: '0.8125rem', color: 'rgba(255,255,255,0.45)', fontWeight: '500' },
-    heroStatDivider: { width: '1px', height: '40px', background: 'rgba(255,255,255,0.1)' },
+    heroStatDivider: { width: '1px', height: '40px', background: 'rgba(15, 23, 42, 0.45)' },
 
     // Hero card
     heroRight: { flex: '0 0 380px' },
@@ -388,7 +388,7 @@ const s = {
         background: 'rgba(255,255,255,0.05)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.1)',
+        border: '1px solid rgba(255,255,255,0.06)',
         borderRadius: '20px',
         padding: '1.5rem',
         boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
@@ -402,7 +402,7 @@ const s = {
     barTrack: {
         flex: 1,
         height: '6px',
-        background: 'rgba(255,255,255,0.08)',
+        background: 'rgba(255,255,255,0.12)',
         borderRadius: '100px',
         overflow: 'hidden',
     },
@@ -453,8 +453,8 @@ const s = {
         gap: '1.25rem',
     },
     featCard: {
-        background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'rgba(15, 23, 42, 0.45)',
+        border: '1px solid rgba(255,255,255,0.12)',
         borderRadius: '16px',
         padding: '1.75rem',
         transition: 'all 0.2s ease',
@@ -476,10 +476,10 @@ const s = {
         gap: '1.75rem',
     },
     roleCard: {
-        background: 'rgba(255,255,255,0.04)',
+        background: 'rgba(15, 23, 42, 0.45)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        border: '1px solid rgba(255,255,255,0.12)',
         borderRadius: '20px',
         padding: '2.25rem',
         display: 'flex',
